@@ -32,7 +32,7 @@ typedef std::deque<SoundEvent> SoundsQueue; // Очередь звуков
 void worldSetup();
 void moveDo(float);
 void stateCheck();
-void charSetSpeed();
+void listsClear();
 
 ////////////////////////////////////////////////////////////////////////////////
 // Клетка на игровом поле
@@ -77,30 +77,71 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Единый класс всех игровых юнитов
+// Базовый класс игровых юнитов
 class Unit
 {
 public:
 
-	// Спецификация юнита
-	typedef enum {
-		utCharacter, // Главный герой
-		utGuard,     // Стажник
-		utFireball   // Выстрел
-	} Type;
+    // Спецификация юнита
+    typedef enum {
+        utUnit,      // Базовый тип
+        utCharacter, // Главный герой
+        utGuard,     // Стажник
+        utFireball   // Выстрел
+    } Type;
 
-	Type u_type;
 	float size;  // Радиус юнита
 	SpacePosition position;  // Положение в двухмерном пространстве
 	Speed speed; // Скорость перемещения
 
-	Unit() {};
+	Unit();
 	Unit(const Unit&);
-	Unit(Type);
+    virtual Type id() { return utUnit; } // Получить тип юнита (RTTI не используем)
 	bool is_collided(const Unit&); // Столкнулись ли с другим юнитом
+    virtual void move(float); // Осуществляем ход
 };
 
-typedef std::list<Unit> UnitsList; // Группа юнитов
+typedef std::list<Unit*> UnitsList; // Группа юнитов
+
+// Главный герой
+class Character : public Unit
+{
+public:
+
+    // Характеристики пути к цели
+    typedef struct
+    {
+        Cell::Coordinates neighbour, target; // Ближайшая ячейка на пути и целевая
+        SpacePosition neigpos; // Пространственные координаты центра ближайшей ячейки
+        std::string path; // Список директив смены направления
+        unsigned stage; // Этап на пути
+    } Target;
+
+    Target way; // Набор характеристик пути к цели
+    bool path_requested; // Обсчитывается путь
+
+    Character();
+    Character(const Character&);
+    virtual Type id() { return utCharacter; }
+    virtual void move(float);
+    void set_speed(); // Устанавливает скорость
+    void way_new_request(int, int); // Запрос обсчета пути
+    void way_new_process(); // Обработка рассчитанного пути
+};
+
+// Стажник
+class Guard : public Unit
+{
+public:
+    virtual Type id() { return utGuard; }
+    virtual void move(float);
+};
+
+// Выстрел
+class Fireball : public Unit 
+{
+    virtual Type id() { return utFireball; }
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Пушки
@@ -142,9 +183,7 @@ extern GameState the_state; // Этап игры
 extern Field the_field; // Игровое поле
 extern UnitsList the_alives; // Активные объекты
 extern Artillery the_artillery; // Все пушки
-extern Unit *the_character; // Указатель на юнит главного героя, содержащийся в общем списке
-extern CharacterTarget the_way; // Набор характеристик пути к цели
+extern Character *the_character; // Указатель на юнит главного героя, содержащийся в общем списке
 extern SoundsQueue the_sounds; // Очередь звуков
-extern bool path_requested; // Обсчитывается путь
 
 extern std::default_random_engine rand_gen;

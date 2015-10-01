@@ -12,15 +12,12 @@ GameState the_state;
 Field the_field;
 UnitsList the_alives;
 Artillery the_artillery;
-Unit *the_character;
-CharacterTarget the_way;
+Character *the_character;
 SoundsQueue the_sounds;
-bool path_requested = false;
 
 std::default_random_engine rand_gen;
 std::uniform_real_distribution<float> rand_distrib(0.0f, 1.0f);
 
-void charSetSpeed();
 template<class RandomIt, class UniformRandomNumberGenerator>
 void shuffle(RandomIt, RandomIt, UniformRandomNumberGenerator&&);
 
@@ -90,17 +87,20 @@ void Field::pos_to_cell(int *x, int *y, const SpacePosition &position)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+Unit::Unit()
+{
+    size = U_SIZE;
+    position.x = 0.0f;
+    position.y = 0.0f;
+    speed.x = 0.0f;
+    speed.y = 0.0f;
+}
+
 Unit::Unit(const Unit& unit)
 {
-	u_type = unit.u_type;
 	size = unit.size;
 	position = unit.position;
 	speed = unit.speed;
-}
-
-Unit::Unit(Type _u_type)
-{
-	u_type = _u_type;
 }
 
 bool Unit::is_collided(const Unit& unit)
@@ -108,6 +108,136 @@ bool Unit::is_collided(const Unit& unit)
 	float a = position.x - unit.position.x;
 	float b = position.y - unit.position.y;
 	return sqrt(a * a + b * b) < size + unit.size;
+}
+
+void Unit::move(float tdelta)
+{
+    position.x += speed.x * tdelta;
+    position.y += speed.y * tdelta;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+Character::Character() : Unit()
+{
+    path_requested = false;
+    way.path = ""; // Стоит на месте
+    way.target.x = 0;
+    way.target.y = 0;
+}
+
+Character::Character(const Character& character) : Unit(character)
+{
+    path_requested = false;
+    way = character.way;
+}
+
+void Character::move(float tdelta)
+{
+    int x, y, dx, dy;
+    if (the_state == gsINPROGRESS)
+        // Перемещаемся только во время игры
+        Unit::move(tdelta);
+    if (way.path.length() == 0)
+        return;
+    if (speed.x > 0.0f && position.x >= way.neigpos.x
+        || speed.x < 0.0f && position.x <= way.neigpos.x
+        || speed.y > 0.0f && position.y >= way.neigpos.y
+        || speed.y < 0.0f && position.y <= way.neigpos.y)
+    {
+        // Этап завершен
+        position = way.neigpos;
+        if (way.stage >= way.path.length() - 1)
+        {
+            // Цель достигнута
+            way.path = "";
+            way.stage = 0;
+            Field::pos_to_cell(&x, &y, position);
+            way.target.x = x;
+            way.target.y = y;
+        }
+        else
+        {
+            // Следующий этап
+            Field::pos_to_cell(&x, &y, position);
+            ++way.stage;
+            pathDirection(&dx, &dy, way.path.at(way.stage));
+            way.neighbour.x += dx;
+            way.neighbour.y += dy;
+            Field::cell_to_pos(&way.neigpos, way.neighbour.x, way.neighbour.y);
+        }
+        set_speed();
+    }
+}
+
+void Character::set_speed()
+{
+    float dx, dy, adx, ady, a;
+    if (way.path.length() == 0)
+    {
+        speed.x = 0.0f;
+        speed.y = 0.0f;
+        return;
+    }
+    dx = way.neigpos.x - position.x;
+    dy = way.neigpos.y - position.y;
+    adx = abs(dx);
+    ady = abs(dy);
+    if (adx < FLT_EPSILON && ady < FLT_EPSILON || way.path.length() == 0)
+        return;
+    if (adx > ady)
+    {
+        a = atan(ady / adx);
+        speed.x = float(_copysign(CHAR_B_SPEED * cos(a), dx));
+        speed.y = float(_copysign(CHAR_B_SPEED * sin(a), dy));
+    }
+    else
+    {
+        a = atan(adx / ady);
+        speed.x = float(_copysign(CHAR_B_SPEED * sin(a), dx));
+        speed.y = float(_copysign(CHAR_B_SPEED * cos(a), dy));
+    }
+}
+
+// Запрос обсчета пути
+void Character::way_new_request(int tx, int ty)
+{
+    int x, y;
+    speed.x = 0.0f;
+    speed.y = 0.0f;
+    Field::pos_to_cell(&x, &y, position);
+    way.target.x = tx;
+    way.target.y = ty;
+    pathFindRequest(the_field, x, y, tx, ty);
+    path_requested = true;
+}
+
+// Обработка рассчитанного пути
+void Character::way_new_process()
+{
+    int x, y, dx, dy;
+    way.path = pathRead();
+    Field::pos_to_cell(&x, &y, position);
+    if (way.path.length() > 0)
+    {
+        way.stage = 0;
+        pathDirection(&dx, &dy, way.path.at(0));
+        way.neighbour.x = x + dx;
+        way.neighbour.y = y + dy;
+        Field::cell_to_pos(&way.neigpos, way.neighbour.x, way.neighbour.y);
+    }
+    set_speed();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void Guard::move(float tdelta)
+{
+    int x, y;
+    Unit::move(tdelta);
+    Field::pos_to_cell(&x, &y, position);
+    if (the_field.cells[y][x].attribs.count(Cell::atrGUARDBACKW) > 0)
+        speed.x = -abs(speed.x);
+    if (the_field.cells[y][x].attribs.count(Cell::atrGUARDFORW) > 0)
+        speed.x = abs(speed.x);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -132,9 +262,7 @@ void worldSetup()
 	int i;
 	Unit *unit;
 
-	the_sounds.clear();
-	the_alives.clear();
-	the_artillery.setting.clear();
+    listsClear();
 
 	// Размечаем поле
 	for (int y = 0; y < WORLD_DIM; y++)
@@ -144,17 +272,15 @@ void worldSetup()
 	the_field.cells[2][0].attribs.insert(Cell::atrGUARDFORW); // Вешка направления движения охраны
 	the_field.cells[2][WORLD_DIM - 1].attribs.insert(Cell::atrGUARDBACKW); // Вешка направления движения охраны
 	// Главный герой
-	the_alives.push_front(Unit(Unit::utCharacter));
-	the_character = &(*the_alives.begin());
+	the_alives.push_front(new Character());
+    the_character = static_cast<Character*>(*the_alives.begin());
 	Field::cell_to_pos(&the_character->position, 0, WORLD_DIM - 1);
-	the_character->size = U_SIZE;
-	the_way.path = ""; // Стоит на месте
-	the_way.target.x = 0;
-	the_way.target.y = WORLD_DIM - 1;
-	charSetSpeed();
+    the_character->way.target.x = 0;
+    the_character->way.target.y = WORLD_DIM - 1;
+	the_character->set_speed();
 	// Стража
-	the_alives.push_front(Unit(Unit::utGuard));
-	unit = &(*the_alives.begin());
+	the_alives.push_front(new Guard());
+	unit = *the_alives.begin();
 	Field::cell_to_pos(&unit->position, 0, 2);
 	unit->size = U_SIZE * 1.5f;
 	unit->speed.x = GUARD_B_SPEED;
@@ -174,6 +300,7 @@ void worldSetup()
 		apositions[WORLD_DIM - 1 + i].speed.x = deviation_apply(complexity_apply(ART_B_SPEED, LEVEL_COMPL), ART_DEV);
 		apositions[WORLD_DIM - 1 + i].speed.y = 0.0f;
 		apositions[WORLD_DIM - 1 + i].delay = deviation_apply(ART_B_DELAY, ART_DEV);
+        apositions[WORLD_DIM - 1 + i].timeout = 0.0f;
 	}
 	shuffle(apositions.begin(), apositions.end(), rand_gen);
 	int acount = min(complexity_apply(ART_COUNT, LEVEL_COMPL), int(apositions.capacity()));
@@ -181,120 +308,38 @@ void worldSetup()
 		the_artillery.setting.push_back(apositions[i]);
 }
 
-// Изменение состояния стражника
-static void guardMove(Unit *unit)
-{
-	int x, y;
-	Field::pos_to_cell(&x, &y, unit->position);
-	if (the_field.cells[y][x].attribs.count(Cell::atrGUARDBACKW) > 0)
-		unit->speed.x = -abs(unit->speed.x);
-	if (the_field.cells[y][x].attribs.count(Cell::atrGUARDFORW) > 0)
-		unit->speed.x = abs(unit->speed.x);
-}
-
-// Устанавливает скорость главного героя
-void charSetSpeed()
-{
-	float dx, dy, adx, ady, a;
-	if (the_way.path.length() == 0)
-	{
-		the_character->speed.x = 0.0f;
-		the_character->speed.y = 0.0f;
-		return;
-	}
-	dx = the_way.neigpos.x - the_character->position.x;
-	dy = the_way.neigpos.y - the_character->position.y;
-	adx = abs(dx);
-	ady = abs(dy);
-	if (adx < FLT_EPSILON && ady < FLT_EPSILON || the_way.path.length() == 0)
-		return;
-	if (adx > ady)
-	{
-		a = atan(ady / adx);
-		the_character->speed.x = float(_copysign(CHAR_B_SPEED * cos(a), dx));
-		the_character->speed.y = float(_copysign(CHAR_B_SPEED * sin(a), dy));
-	}
-	else
-	{
-		a = atan(adx / ady);
-		the_character->speed.x = float(_copysign(CHAR_B_SPEED * sin(a), dx));
-		the_character->speed.y = float(_copysign(CHAR_B_SPEED * cos(a), dy));
-	}
-}
-
-// Обновляет состояние главного героя
-static void charMove()
-{
-	int x, y, dx, dy;
-	if (the_way.path.length() == 0)
-		return;
-	if (the_character->speed.x > 0.0f && the_character->position.x >= the_way.neigpos.x
-		|| the_character->speed.x < 0.0f && the_character->position.x <= the_way.neigpos.x
-		|| the_character->speed.y > 0.0f && the_character->position.y >= the_way.neigpos.y
-		|| the_character->speed.y < 0.0f && the_character->position.y <= the_way.neigpos.y)
-	{
-		// Этап завершен
-		the_character->position = the_way.neigpos;
-		if (the_way.stage >= the_way.path.length() - 1)
-		{
-			// Цель достигнута
-			the_way.path = "";
-			the_way.stage = 0;
-			Field::pos_to_cell(&x, &y, the_character->position);
-			the_way.target.x = x;
-			the_way.target.y = y;
-		}
-		else
-		{
-			// Следующий этап
-			Field::pos_to_cell(&x, &y, the_character->position);
-			++the_way.stage;
-			pathDirection(&dx, &dy, the_way.path.at(the_way.stage));
-			the_way.neighbour.x += dx;
-			the_way.neighbour.y += dy;
-			Field::cell_to_pos(&the_way.neigpos, the_way.neighbour.x, the_way.neighbour.y);
-		}
-		charSetSpeed();
-	}
-}
-
+// Изменения в состоянии мира за отведённый квант времени
 void moveDo(float tdelta)
 {
+    Unit *unit;
 	// Перемещаем существующие юниты и удаляем отжившие
 	for (UnitsList::iterator it = the_alives.begin(); it != the_alives.end();)
 	{
-		if (it->u_type == Unit::utCharacter && the_state != gsINPROGRESS)
-		{
-			++it;
-			continue;
-		}
-		it->position.x += it->speed.x * tdelta;
-		it->position.y += it->speed.y * tdelta;
-		if (it->u_type == Unit::utGuard)
-			guardMove(&(*it));
-		if (it->position.x > 1.0f || it->position.x < -1.0 || it->position.y > 1.0f || it->position.y < -1.0)
-			it = the_alives.erase(it);
-		else
-			++it;
+        (*it)->move(tdelta);
+        if ((*it)->position.x > 1.0f || (*it)->position.x < -1.0f || (*it)->position.y > 1.0f || (*it)->position.y < -1.0f)
+        {
+            delete *it;
+            it = the_alives.erase(it);
+        }
+        else
+            ++it;
 	}
-	// Обновляем состояние главного героя
-	charMove();
 	// Генерируем новые выстрелы
-	Unit fb(Unit::utFireball);
 	for (Artillery::Settings::iterator it = the_artillery.setting.begin(); it != the_artillery.setting.end(); ++it)
 	{
 		it->timeout -= tdelta;
 		if (it->timeout <= 0.0f)
 		{
 			it->timeout = it->delay;
-			Field::cell_to_pos(&fb.position, it->position.x, it->position.y);
-			if (abs(it->speed.x) >= FLT_EPSILON)
-				fb.position.x -= CELL_HW;
+            the_alives.push_front(new Fireball());
+            unit = *the_alives.begin();
+			Field::cell_to_pos(&unit->position, it->position.x, it->position.y);
+			if (it->speed.x > 0.0f)
+                unit->position.x -= CELL_HW;
 			else
-				fb.position.y -= CELL_HW;
-			fb.size = U_SIZE;
-			fb.speed = it->speed;
-			the_alives.push_back(fb);
+                unit->position.y -= CELL_HW;
+            unit->size = U_SIZE;
+            unit->speed = it->speed;
 			the_sounds.push_back(seSHOT);
 		}
 	}
@@ -312,14 +357,24 @@ void stateCheck()
 	}
 	for (UnitsList::iterator it = the_alives.begin(); it != the_alives.end(); ++it)
 	{
-		if (it->u_type == Unit::utCharacter)
+		if (*it == the_character)
 			continue;
-		if (the_character->is_collided(*it))
+		if (the_character->is_collided(*(*it)))
 		{
 			the_state = gsLOSS;
 			return;
 		}
 	}
+}
+
+// Очистка всех списков
+void listsClear()
+{
+    for (UnitsList::iterator it = the_alives.begin(); it != the_alives.end(); ++it)
+        delete *it;
+    the_alives.clear();
+    the_artillery.setting.clear();
+    the_sounds.clear();
 }
 
 // Реализация отсутствующего в VS2010 std::shuffle

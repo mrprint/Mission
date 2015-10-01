@@ -79,6 +79,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	hge->System_Shutdown();
 	hge->Release();
 
+    listsClear();
+
 	return 0;
 }
 

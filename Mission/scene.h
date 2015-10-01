@@ -7,5 +7,3 @@ bool sceneSetup();
 void sceneFree();
 bool FrameFunc();
 bool RenderFunc();
-void wayNewRequest(int, int);
-void wayNewProcess();
