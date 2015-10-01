@@ -8,23 +8,23 @@
 #include "settings.h"
 
 typedef struct {
-	float x, y;
+    float x, y;
 }
 SpacePosition, // Положение в пространстве, где -1.0 соответствует одной границе поля, а 1.0 противоположной
 Speed; // Скорость
 
 // Состояние игры
 typedef enum {
-	gsINPROGRESS,
-	gsLOSS,
-	gsWIN
+    gsINPROGRESS,
+    gsLOSS,
+    gsWIN
 } GameState;
 
 // Звуковое событие
 typedef enum {
-	seSHOT,
-	seHIT,
-	seLVLUP
+    seSHOT,
+    seHIT,
+    seLVLUP
 } SoundEvent;
 
 typedef std::deque<SoundEvent> SoundsQueue; // Очередь звуков
@@ -40,26 +40,26 @@ class Cell
 {
 public:
 
-	// Какие-либо атрибуты клетки
-	typedef enum {
-		atrOBSTACLE, // "Препятствие"
-		atrEXIT, // Зона выхода
-		atrGUARDFORW, // Охране вперёд
-		atrGUARDBACKW // Охране назад
-	} Attribute;
+    // Какие-либо атрибуты клетки
+    typedef enum {
+        atrOBSTACLE, // "Препятствие"
+        atrEXIT, // Зона выхода
+        atrGUARDFORW, // Охране вперёд
+        atrGUARDBACKW // Охране назад
+    } Attribute;
 
-	typedef std::set<Attribute> Attributes;
+    typedef std::set<Attribute> Attributes;
 
-	// Позиция на игровом поле
-	typedef struct {
-		int x, y;
-	} Coordinates;
+    // Позиция на игровом поле
+    typedef struct {
+        int x, y;
+    } Coordinates;
 
-	std::set<Attribute> attribs;
+    std::set<Attribute> attribs;
 
-	Cell() {};
-	Cell(const Cell&);
-	Cell(const Attributes&);
+    Cell() {};
+    Cell(const Cell&);
+    Cell(const Attributes&);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -68,12 +68,12 @@ class Field
 {
 public:
 
-	Cell cells[WORLD_DIM][WORLD_DIM];
+    Cell cells[WORLD_DIM][WORLD_DIM];
 
-	Field() {};
-	Field(const Field&);
-	static void cell_to_pos(SpacePosition*, int, int);
-	static void pos_to_cell(int *x, int *y, const SpacePosition &position);
+    Field() {};
+    Field(const Field&);
+    static void cell_to_pos(SpacePosition*, int, int);
+    static void pos_to_cell(int *x, int *y, const SpacePosition &position);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -90,14 +90,14 @@ public:
         utFireball   // Выстрел
     } Type;
 
-	float size;  // Радиус юнита
-	SpacePosition position;  // Положение в двухмерном пространстве
-	Speed speed; // Скорость перемещения
+    float size;  // Радиус юнита
+    SpacePosition position;  // Положение в двухмерном пространстве
+    Speed speed; // Скорость перемещения
 
-	Unit();
-	Unit(const Unit&);
+    Unit();
+    Unit(const Unit&);
     virtual Type id() { return utUnit; } // Получить тип юнита (RTTI не используем)
-	bool is_collided(const Unit&); // Столкнулись ли с другим юнитом
+    bool is_collided(const Unit&); // Столкнулись ли с другим юнитом
     virtual void move(float); // Осуществляем ход
 };
 
@@ -149,30 +149,30 @@ class Artillery
 {
 public:
 
-	// Настройки ведения огня
-	typedef struct {
-		Cell::Coordinates position;
-		Speed speed;
-		float delay;
-		float timeout;
-	} Setting;
+    // Настройки ведения огня
+    typedef struct {
+        Cell::Coordinates position;
+        Speed speed;
+        float delay;
+        float timeout;
+    } Setting;
 
-	typedef std::vector<Setting> Settings;
+    typedef std::vector<Setting> Settings;
 
-	Settings setting; // Все пушки артбатареи
+    Settings setting; // Все пушки артбатареи
 
-	Artillery() {};
-	Artillery(const Settings&);
+    Artillery() {};
+    Artillery(const Settings&);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 // Характеристики пути к цели
 typedef struct
 {
-	Cell::Coordinates neighbour, target; // Ближайшая ячейка на пути и целевая
-	SpacePosition neigpos; // Пространственные координаты центра ближайшей ячейки
-	std::string path; // Список директив смены направления
-	unsigned stage; // Этап на пути
+    Cell::Coordinates neighbour, target; // Ближайшая ячейка на пути и целевая
+    SpacePosition neigpos; // Пространственные координаты центра ближайшей ячейки
+    std::string path; // Список директив смены направления
+    unsigned stage; // Этап на пути
 } CharacterTarget;
 
 ////////////////////////////////////////////////////////////////////////////////
