@@ -13,10 +13,12 @@ typedef struct {
     Field *field;
     int xStart, yStart, xFinish, yFinish;
     std::string path;
-    bool ready_flag;
+    volatile bool done_flag; // Неограждаемый, т.к. изменяется только один раз
+    volatile bool ready_flag;
 } PathQueryInfo; // Структура для межпотокового обмена
 
-PathQueryInfo path_query_info;
+PathQueryInfo path_query_info = {NULL, 0, 0, 0, 0, "", false, true};
+uintptr_t upThread;
 HANDLE hEventPut;
 CRITICAL_SECTION cs;
 
@@ -32,6 +34,8 @@ void CalcThread(void* pParams)
     while (true)
     {
         WaitForSingleObject(hEventPut, INFINITE);
+        if (path_query_info.done_flag)
+            break;
         if (!pathReadyCheck())
         {
             path = pathFind(*path_query_info.field, path_query_info.xStart, path_query_info.yStart, path_query_info.xFinish, path_query_info.yFinish);
@@ -45,7 +49,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
     hEventPut = CreateEvent(NULL, FALSE, FALSE, NULL);
     InitializeCriticalSection(&cs);
-    ready_flag_set(true);
 
     hge = hgeCreate(HGE_VERSION);
     hge->System_SetState(HGE_LOGFILE, expand_environment_variables("${USERPROFILE}\\hge_mission.log").c_str());
@@ -62,7 +65,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     rand_gen.seed((unsigned long)(std::time(0)));
 
-    if (hge->System_Initiate() && _beginthread(CalcThread, 0, NULL) != -1L)
+    upThread = _beginthread(CalcThread, 0, NULL);
+    if (hge->System_Initiate() && upThread != -1L)
     {
         the_state = gsINPROGRESS;
         level = 0;
@@ -76,10 +80,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         MessageBox(NULL, hge->System_GetErrorMessage(), "Error", MB_OK | MB_ICONERROR | MB_APPLMODAL);
     }
 
+    // Просим вспомогательный поток остановиться
+    path_query_info.done_flag = true;
+    SetEvent(hEventPut);
+    // Пока думает, занимаемся другими делами
     hge->System_Shutdown();
     hge->Release();
-
     listsClear();
+
+    WaitForSingleObject(reinterpret_cast<HANDLE>(upThread), INFINITE); // Ожидаем завершения потока
 
     return 0;
 }

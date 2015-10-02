@@ -133,6 +133,7 @@ void sceneFree()
     delete chspr;
     delete rgspr;
     delete lgspr;
+    delete epspr;
     delete fbspr;
     delete rbspr;
     delete lbspr;
