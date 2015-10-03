@@ -73,23 +73,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         worldSetup();
         sceneSetup();
         hge->System_Start();
+        // ќстанавливаем вспомогательный поток
+        path_query_info.done_flag = true;
+        SetEvent(hEventPut);
+        WaitForSingleObject(reinterpret_cast<HANDLE>(upThread), INFINITE);
+        CloseHandle(hEventPut);
+        
         sceneFree();
+        listsClear();
     }
     else
     {
         MessageBox(NULL, hge->System_GetErrorMessage(), "Error", MB_OK | MB_ICONERROR | MB_APPLMODAL);
     }
 
-    // ѕросим вспомогательный поток остановитьс€
-    path_query_info.done_flag = true;
-    SetEvent(hEventPut);
-    // ѕока думает, занимаемс€ другими делами
     hge->System_Shutdown();
     hge->Release();
-    listsClear();
 
-    WaitForSingleObject(reinterpret_cast<HANDLE>(upThread), INFINITE); // ќжидаем завершени€ потока
-
+    DeleteCriticalSection(&cs);
     return 0;
 }
 
