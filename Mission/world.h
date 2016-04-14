@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 #include <random>
 #include <deque>
@@ -10,24 +10,24 @@
 typedef struct {
     float x, y;
 }
-SpacePosition, // Положение в пространстве, где -1.0 соответствует одной границе поля, а 1.0 противоположной
-Speed; // Скорость
+SpacePosition, // РџРѕР»РѕР¶РµРЅРёРµ РІ РїСЂРѕСЃС‚СЂР°РЅСЃС‚РІРµ, РіРґРµ -1.0 СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓРµС‚ РѕРґРЅРѕР№ РіСЂР°РЅРёС†Рµ РїРѕР»СЏ, Р° 1.0 РїСЂРѕС‚РёРІРѕРїРѕР»РѕР¶РЅРѕР№
+Speed; // РЎРєРѕСЂРѕСЃС‚СЊ
 
-// Состояние игры
+// РЎРѕСЃС‚РѕСЏРЅРёРµ РёРіСЂС‹
 typedef enum {
     gsINPROGRESS,
     gsLOSS,
     gsWIN
 } GameState;
 
-// Звуковое событие
+// Р—РІСѓРєРѕРІРѕРµ СЃРѕР±С‹С‚РёРµ
 typedef enum {
     seSHOT,
     seHIT,
     seLVLUP
 } SoundEvent;
 
-typedef std::deque<SoundEvent> SoundsQueue; // Очередь звуков
+typedef std::deque<SoundEvent> SoundsQueue; // РћС‡РµСЂРµРґСЊ Р·РІСѓРєРѕРІ
 
 void worldSetup();
 void moveDo(float);
@@ -35,22 +35,22 @@ void stateCheck();
 void listsClear();
 
 ////////////////////////////////////////////////////////////////////////////////
-// Клетка на игровом поле
+// РљР»РµС‚РєР° РЅР° РёРіСЂРѕРІРѕРј РїРѕР»Рµ
 class Cell
 {
 public:
 
-    // Какие-либо атрибуты клетки
+    // РљР°РєРёРµ-Р»РёР±Рѕ Р°С‚СЂРёР±СѓС‚С‹ РєР»РµС‚РєРё
     typedef enum {
-        atrOBSTACLE, // "Препятствие"
-        atrEXIT, // Зона выхода
-        atrGUARDFORW, // Охране вперёд
-        atrGUARDBACKW // Охране назад
+        atrOBSTACLE, // "РџСЂРµРїСЏС‚СЃС‚РІРёРµ"
+        atrEXIT, // Р—РѕРЅР° РІС‹С…РѕРґР°
+        atrGUARDFORW, // РћС…СЂР°РЅРµ РІРїРµСЂС‘Рґ
+        atrGUARDBACKW // РћС…СЂР°РЅРµ РЅР°Р·Р°Рґ
     } Attribute;
 
     typedef std::set<Attribute> Attributes;
 
-    // Позиция на игровом поле
+    // РџРѕР·РёС†РёСЏ РЅР° РёРіСЂРѕРІРѕРј РїРѕР»Рµ
     struct Coordinates {
         int x, y;
     };
@@ -63,7 +63,7 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Игровое поле
+// РРіСЂРѕРІРѕРµ РїРѕР»Рµ
 class Field
 {
 public:
@@ -77,58 +77,58 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Базовый класс игровых юнитов
+// Р‘Р°Р·РѕРІС‹Р№ РєР»Р°СЃСЃ РёРіСЂРѕРІС‹С… СЋРЅРёС‚РѕРІ
 class Unit
 {
 public:
 
-    // Спецификация юнита
+    // РЎРїРµС†РёС„РёРєР°С†РёСЏ СЋРЅРёС‚Р°
     typedef enum {
-        utUnit,      // Базовый тип
-        utCharacter, // Главный герой
-        utGuard,     // Стажник
-        utFireball   // Выстрел
+        utUnit,      // Р‘Р°Р·РѕРІС‹Р№ С‚РёРї
+        utCharacter, // Р“Р»Р°РІРЅС‹Р№ РіРµСЂРѕР№
+        utGuard,     // РЎС‚Р°Р¶РЅРёРє
+        utFireball   // Р’С‹СЃС‚СЂРµР»
     } Type;
 
-    float size;  // Радиус юнита
-    SpacePosition position;  // Положение в двухмерном пространстве
-    Speed speed; // Скорость перемещения
+    float size;  // Р Р°РґРёСѓСЃ СЋРЅРёС‚Р°
+    SpacePosition position;  // РџРѕР»РѕР¶РµРЅРёРµ РІ РґРІСѓС…РјРµСЂРЅРѕРј РїСЂРѕСЃС‚СЂР°РЅСЃС‚РІРµ
+    Speed speed; // РЎРєРѕСЂРѕСЃС‚СЊ РїРµСЂРµРјРµС‰РµРЅРёСЏ
 
     Unit();
     Unit(const Unit&);
-    virtual Type id() { return utUnit; } // Получить тип юнита (RTTI не используем)
-    bool is_collided(const Unit&); // Столкнулись ли с другим юнитом
-    virtual void move(float); // Осуществляем ход
+    virtual Type id() { return utUnit; } // РџРѕР»СѓС‡РёС‚СЊ С‚РёРї СЋРЅРёС‚Р° (RTTI РЅРµ РёСЃРїРѕР»СЊР·СѓРµРј)
+    bool is_collided(const Unit&); // РЎС‚РѕР»РєРЅСѓР»РёСЃСЊ Р»Рё СЃ РґСЂСѓРіРёРј СЋРЅРёС‚РѕРј
+    virtual void move(float); // РћСЃСѓС‰РµСЃС‚РІР»СЏРµРј С…РѕРґ
 };
 
-typedef std::list<Unit*> UnitsList; // Группа юнитов
+typedef std::list<Unit*> UnitsList; // Р“СЂСѓРїРїР° СЋРЅРёС‚РѕРІ
 
-// Главный герой
+// Р“Р»Р°РІРЅС‹Р№ РіРµСЂРѕР№
 class Character : public Unit
 {
 public:
 
-    // Характеристики пути к цели
+    // РҐР°СЂР°РєС‚РµСЂРёСЃС‚РёРєРё РїСѓС‚Рё Рє С†РµР»Рё
     struct Target {
-        Cell::Coordinates neighbour, target; // Ближайшая ячейка на пути и целевая
-        SpacePosition neigpos; // Пространственные координаты центра ближайшей ячейки
-        std::string path; // Список директив смены направления
-        unsigned stage; // Этап на пути
+        Cell::Coordinates neighbour, target; // Р‘Р»РёР¶Р°Р№С€Р°СЏ СЏС‡РµР№РєР° РЅР° РїСѓС‚Рё Рё С†РµР»РµРІР°СЏ
+        SpacePosition neigpos; // РџСЂРѕСЃС‚СЂР°РЅСЃС‚РІРµРЅРЅС‹Рµ РєРѕРѕСЂРґРёРЅР°С‚С‹ С†РµРЅС‚СЂР° Р±Р»РёР¶Р°Р№С€РµР№ СЏС‡РµР№РєРё
+        std::string path; // РЎРїРёСЃРѕРє РґРёСЂРµРєС‚РёРІ СЃРјРµРЅС‹ РЅР°РїСЂР°РІР»РµРЅРёСЏ
+        unsigned stage; // Р­С‚Р°Рї РЅР° РїСѓС‚Рё
     };
 
-    Target way; // Набор характеристик пути к цели
-    bool path_requested; // Обсчитывается путь
+    Target way; // РќР°Р±РѕСЂ С…Р°СЂР°РєС‚РµСЂРёСЃС‚РёРє РїСѓС‚Рё Рє С†РµР»Рё
+    bool path_requested; // РћР±СЃС‡РёС‚С‹РІР°РµС‚СЃСЏ РїСѓС‚СЊ
 
     Character();
     Character(const Character&);
     virtual Type id() { return utCharacter; }
     virtual void move(float);
-    void set_speed(); // Устанавливает скорость
-    void way_new_request(int, int); // Запрос обсчета пути
-    void way_new_process(); // Обработка рассчитанного пути
+    void set_speed(); // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ СЃРєРѕСЂРѕСЃС‚СЊ
+    void way_new_request(int, int); // Р—Р°РїСЂРѕСЃ РѕР±СЃС‡РµС‚Р° РїСѓС‚Рё
+    void way_new_process(); // РћР±СЂР°Р±РѕС‚РєР° СЂР°СЃСЃС‡РёС‚Р°РЅРЅРѕРіРѕ РїСѓС‚Рё
 };
 
-// Стажник
+// РЎС‚Р°Р¶РЅРёРє
 class Guard : public Unit
 {
 public:
@@ -136,19 +136,19 @@ public:
     virtual void move(float);
 };
 
-// Выстрел
+// Р’С‹СЃС‚СЂРµР»
 class Fireball : public Unit
 {
     virtual Type id() { return utFireball; }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Пушки
+// РџСѓС€РєРё
 class Artillery
 {
 public:
 
-    // Настройки ведения огня
+    // РќР°СЃС‚СЂРѕР№РєРё РІРµРґРµРЅРёСЏ РѕРіРЅСЏ
     struct Setting {
         Cell::Coordinates position;
         Speed speed;
@@ -158,30 +158,30 @@ public:
 
     typedef std::vector<Setting> Settings;
 
-    Settings setting; // Все пушки артбатареи
+    Settings setting; // Р’СЃРµ РїСѓС€РєРё Р°СЂС‚Р±Р°С‚Р°СЂРµРё
 
     Artillery() {};
     Artillery(const Settings&);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Характеристики пути к цели
+// РҐР°СЂР°РєС‚РµСЂРёСЃС‚РёРєРё РїСѓС‚Рё Рє С†РµР»Рё
 struct CharacterTarget {
-    Cell::Coordinates neighbour, target; // Ближайшая ячейка на пути и целевая
-    SpacePosition neigpos; // Пространственные координаты центра ближайшей ячейки
-    std::string path; // Список директив смены направления
-    unsigned stage; // Этап на пути
+    Cell::Coordinates neighbour, target; // Р‘Р»РёР¶Р°Р№С€Р°СЏ СЏС‡РµР№РєР° РЅР° РїСѓС‚Рё Рё С†РµР»РµРІР°СЏ
+    SpacePosition neigpos; // РџСЂРѕСЃС‚СЂР°РЅСЃС‚РІРµРЅРЅС‹Рµ РєРѕРѕСЂРґРёРЅР°С‚С‹ С†РµРЅС‚СЂР° Р±Р»РёР¶Р°Р№С€РµР№ СЏС‡РµР№РєРё
+    std::string path; // РЎРїРёСЃРѕРє РґРёСЂРµРєС‚РёРІ СЃРјРµРЅС‹ РЅР°РїСЂР°РІР»РµРЅРёСЏ
+    unsigned stage; // Р­С‚Р°Рї РЅР° РїСѓС‚Рё
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Основные объекты
+// РћСЃРЅРѕРІРЅС‹Рµ РѕР±СЉРµРєС‚С‹
 
-extern unsigned level; // Текущий уровень, начиная с 0
-extern GameState the_state; // Этап игры
-extern Field the_field; // Игровое поле
-extern UnitsList the_alives; // Активные объекты
-extern Artillery the_artillery; // Все пушки
-extern Character *the_character; // Указатель на юнит главного героя, содержащийся в общем списке
-extern SoundsQueue the_sounds; // Очередь звуков
+extern unsigned level; // РўРµРєСѓС‰РёР№ СѓСЂРѕРІРµРЅСЊ, РЅР°С‡РёРЅР°СЏ СЃ 0
+extern GameState the_state; // Р­С‚Р°Рї РёРіСЂС‹
+extern Field the_field; // РРіСЂРѕРІРѕРµ РїРѕР»Рµ
+extern UnitsList the_alives; // РђРєС‚РёРІРЅС‹Рµ РѕР±СЉРµРєС‚С‹
+extern Artillery the_artillery; // Р’СЃРµ РїСѓС€РєРё
+extern Character *the_character; // РЈРєР°Р·Р°С‚РµР»СЊ РЅР° СЋРЅРёС‚ РіР»Р°РІРЅРѕРіРѕ РіРµСЂРѕСЏ, СЃРѕРґРµСЂР¶Р°С‰РёР№СЃСЏ РІ РѕР±С‰РµРј СЃРїРёСЃРєРµ
+extern SoundsQueue the_sounds; // РћС‡РµСЂРµРґСЊ Р·РІСѓРєРѕРІ
 
 extern std::default_random_engine rand_gen;

@@ -1,5 +1,5 @@
-// Реализация A-star
-// Взято с http://code.activestate.com/recipes/577457-a-star-shortest-path-algorithm/ и адаптировано
+п»ї// Р РµР°Р»РёР·Р°С†РёСЏ A-star
+// Р’Р·СЏС‚Рѕ СЃ http://code.activestate.com/recipes/577457-a-star-shortest-path-algorithm/ Рё Р°РґР°РїС‚РёСЂРѕРІР°РЅРѕ
 
 #include <queue>
 

@@ -1,18 +1,18 @@
-#pragma once
+п»ї#pragma once
 
 #ifdef _DEBUG
 #include <vld.h>
 #endif
 #include <hge.h>
 
-// Отрисовка полностью адаптируется под настройки разрешения, размера поля и отступов от границы экрана
+// РћС‚СЂРёСЃРѕРІРєР° РїРѕР»РЅРѕСЃС‚СЊСЋ Р°РґР°РїС‚РёСЂСѓРµС‚СЃСЏ РїРѕРґ РЅР°СЃС‚СЂРѕР№РєРё СЂР°Р·СЂРµС€РµРЅРёСЏ, СЂР°Р·РјРµСЂР° РїРѕР»СЏ Рё РѕС‚СЃС‚СѓРїРѕРІ РѕС‚ РіСЂР°РЅРёС†С‹ СЌРєСЂР°РЅР°
 
 const char TITLE[] = "The Mission";
 
 const int SCREEN_W = 1024;
 const int SCREEN_H = 768;
-const int WORLD_DIM = 30; // Размерность поля
-const int _LC_OFST = 8; // Желаемый отступ левого угла комнаты от края экрана
+const int WORLD_DIM = 30; // Р Р°Р·РјРµСЂРЅРѕСЃС‚СЊ РїРѕР»СЏ
+const int _LC_OFST = 8; // Р–РµР»Р°РµРјС‹Р№ РѕС‚СЃС‚СѓРї Р»РµРІРѕРіРѕ СѓРіР»Р° РєРѕРјРЅР°С‚С‹ РѕС‚ РєСЂР°СЏ СЌРєСЂР°РЅР°
 
 const int TILE_W = (SCREEN_W - (_LC_OFST * 2)) / WORLD_DIM - ((SCREEN_W - (_LC_OFST * 2)) / WORLD_DIM) % 2;
 const int TILE_H = TILE_W / 2;
@@ -20,8 +20,8 @@ const int TILE_HW = TILE_W / 2;
 const int TILE_HH = TILE_H / 2 + (TILE_H / 2) % 2;
 const int ROOM_W = TILE_W * WORLD_DIM;
 const int ROOM_H = TILE_H * WORLD_DIM;
-const int LC_OFST = (SCREEN_W - ROOM_W) / 2; // Реальный отступ левого угла комнаты от края экрана
-const int TC_OFST = (SCREEN_H - ROOM_H) / 2; // Отступ верхнего угла комнаты от края экрана
+const int LC_OFST = (SCREEN_W - ROOM_W) / 2; // Р РµР°Р»СЊРЅС‹Р№ РѕС‚СЃС‚СѓРї Р»РµРІРѕРіРѕ СѓРіР»Р° РєРѕРјРЅР°С‚С‹ РѕС‚ РєСЂР°СЏ СЌРєСЂР°РЅР°
+const int TC_OFST = (SCREEN_H - ROOM_H) / 2; // РћС‚СЃС‚СѓРї РІРµСЂС…РЅРµРіРѕ СѓРіР»Р° РєРѕРјРЅР°С‚С‹ РѕС‚ РєСЂР°СЏ СЌРєСЂР°РЅР°
 const float CELL_W = 2.0f / WORLD_DIM;
 const float CELL_HW = CELL_W / 2.0f;
 const float U_SIZE = CELL_HW * 0.66f;

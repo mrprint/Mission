@@ -1,4 +1,4 @@
-#include <windows.h>
+п»ї#include <windows.h>
 #include <process.h>
 #include <ctime>
 #include <stdlib.h>
@@ -13,9 +13,9 @@ typedef struct {
     Field *field;
     int xStart, yStart, xFinish, yFinish;
     std::string path;
-    volatile bool done_flag; // Неограждаемый, т.к. изменяется только один раз
+    volatile bool done_flag; // РќРµРѕРіСЂР°Р¶РґР°РµРјС‹Р№, С‚.Рє. РёР·РјРµРЅСЏРµС‚СЃСЏ С‚РѕР»СЊРєРѕ РѕРґРёРЅ СЂР°Р·
     volatile bool ready_flag;
-} PathQueryInfo; // Структура для межпотокового обмена
+} PathQueryInfo; // РЎС‚СЂСѓРєС‚СѓСЂР° РґР»СЏ РјРµР¶РїРѕС‚РѕРєРѕРІРѕРіРѕ РѕР±РјРµРЅР°
 
 PathQueryInfo path_query_info = {NULL, 0, 0, 0, 0, "", false, true};
 uintptr_t upThread;
@@ -25,9 +25,9 @@ CRITICAL_SECTION cs;
 void ready_flag_set(bool val);
 std::string expand_environment_variables(std::string);
 
-// Функция вспомогательного потока расчета пути
-// Реализованная механика не учитывает возможные изменения на поле во время расчета, 
-// поэтому они должны явно блокироваться на соответствующих участках
+// Р¤СѓРЅРєС†РёСЏ РІСЃРїРѕРјРѕРіР°С‚РµР»СЊРЅРѕРіРѕ РїРѕС‚РѕРєР° СЂР°СЃС‡РµС‚Р° РїСѓС‚Рё
+// Р РµР°Р»РёР·РѕРІР°РЅРЅР°СЏ РјРµС…Р°РЅРёРєР° РЅРµ СѓС‡РёС‚С‹РІР°РµС‚ РІРѕР·РјРѕР¶РЅС‹Рµ РёР·РјРµРЅРµРЅРёСЏ РЅР° РїРѕР»Рµ РІРѕ РІСЂРµРјСЏ СЂР°СЃС‡РµС‚Р°, 
+// РїРѕСЌС‚РѕРјСѓ РѕРЅРё РґРѕР»Р¶РЅС‹ СЏРІРЅРѕ Р±Р»РѕРєРёСЂРѕРІР°С‚СЊСЃСЏ РЅР° СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёС… СѓС‡Р°СЃС‚РєР°С…
 void CalcThread(void* pParams)
 {
     std::string path;
@@ -73,7 +73,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         worldSetup();
         sceneSetup();
         hge->System_Start();
-        // Останавливаем вспомогательный поток
+        // РћСЃС‚Р°РЅР°РІР»РёРІР°РµРј РІСЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Р№ РїРѕС‚РѕРє
         path_query_info.done_flag = true;
         SetEvent(hEventPut);
         WaitForSingleObject(reinterpret_cast<HANDLE>(upThread), INFINITE);
@@ -94,7 +94,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     return 0;
 }
 
-// Запрос на расчёт пути
+// Р—Р°РїСЂРѕСЃ РЅР° СЂР°СЃС‡С‘С‚ РїСѓС‚Рё
 void pathFindRequest(const Field &field, int xStart, int yStart, int xFinish, int yFinish)
 {
     if (pathReadyCheck())
@@ -109,7 +109,7 @@ void pathFindRequest(const Field &field, int xStart, int yStart, int xFinish, in
     SetEvent(hEventPut);
 }
 
-// Проверка наличия результата
+// РџСЂРѕРІРµСЂРєР° РЅР°Р»РёС‡РёСЏ СЂРµР·СѓР»СЊС‚Р°С‚Р°
 bool pathReadyCheck()
 {
     bool ready;
@@ -119,15 +119,15 @@ bool pathReadyCheck()
     return ready;
 }
 
-// Получение результата
+// РџРѕР»СѓС‡РµРЅРёРµ СЂРµР·СѓР»СЊС‚Р°С‚Р°
 std::string pathRead()
 {
     return path_query_info.path;
 }
 
-// Огороженная установка флага готовности результата
-// true - готов
-// false - идёт расчёт
+// РћРіРѕСЂРѕР¶РµРЅРЅР°СЏ СѓСЃС‚Р°РЅРѕРІРєР° С„Р»Р°РіР° РіРѕС‚РѕРІРЅРѕСЃС‚Рё СЂРµР·СѓР»СЊС‚Р°С‚Р°
+// true - РіРѕС‚РѕРІ
+// false - РёРґС‘С‚ СЂР°СЃС‡С‘С‚
 static void ready_flag_set(bool val)
 {
     EnterCriticalSection(&cs);
@@ -135,8 +135,8 @@ static void ready_flag_set(bool val)
     LeaveCriticalSection(&cs);
 }
 
-// Универсальная распаковка переменных системы в пути
-// Найдено в интернете и адаптировано
+// РЈРЅРёРІРµСЂСЃР°Р»СЊРЅР°СЏ СЂР°СЃРїР°РєРѕРІРєР° РїРµСЂРµРјРµРЅРЅС‹С… СЃРёСЃС‚РµРјС‹ РІ РїСѓС‚Рё
+// РќР°Р№РґРµРЅРѕ РІ РёРЅС‚РµСЂРЅРµС‚Рµ Рё Р°РґР°РїС‚РёСЂРѕРІР°РЅРѕ
 static std::string expand_environment_variables(std::string s)
 {
     using namespace std;

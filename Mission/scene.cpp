@@ -1,4 +1,4 @@
-#include <typeinfo.h>
+п»ї#include <typeinfo.h>
 #include <algorithm>
 #include <vector>
 #include <hge.h>
@@ -16,14 +16,14 @@ const float SPR_SCALE = TILE_W / SPR_SIZE;
 const float SK45 = 0.7071067812f;
 const float HYP2 = 2.828427125f;
 
-// Юнит с рассчитанным расположением на экране
+// Р®РЅРёС‚ СЃ СЂР°СЃСЃС‡РёС‚Р°РЅРЅС‹Рј СЂР°СЃРїРѕР»РѕР¶РµРЅРёРµРј РЅР° СЌРєСЂР°РЅРµ
 struct ScreenPos {
     float x, y;
     Unit *unit;
     bool operator<(const ScreenPos &sp) { return (y < sp.y); }
 };
 
-typedef std::vector<ScreenPos> ScreenPositions; // Список расположения юнитов
+typedef std::vector<ScreenPos> ScreenPositions; // РЎРїРёСЃРѕРє СЂР°СЃРїРѕР»РѕР¶РµРЅРёСЏ СЋРЅРёС‚РѕРІ
 
 HGE *hge = 0;
 float banner_timeout = 0.0f;
@@ -41,7 +41,7 @@ void pathChange(float, float);
 bool cellFlip(float, float);
 void soundsPlay();
 
-// Трансформация пространственных координат в экранные
+// РўСЂР°РЅСЃС„РѕСЂРјР°С†РёСЏ РїСЂРѕСЃС‚СЂР°РЅСЃС‚РІРµРЅРЅС‹С… РєРѕРѕСЂРґРёРЅР°С‚ РІ СЌРєСЂР°РЅРЅС‹Рµ
 static inline void space_to_screen(float *x, float *y, const SpacePosition &position)
 {
     float xsk = position.x * SK45;
@@ -52,7 +52,7 @@ static inline void space_to_screen(float *x, float *y, const SpacePosition &posi
     *y = TC_OFST + (HYP2 / 2.0f + ty) * ROOM_H / HYP2;
 }
 
-// Трансформация экранных координат в пространственные
+// РўСЂР°РЅСЃС„РѕСЂРјР°С†РёСЏ СЌРєСЂР°РЅРЅС‹С… РєРѕРѕСЂРґРёРЅР°С‚ РІ РїСЂРѕСЃС‚СЂР°РЅСЃС‚РІРµРЅРЅС‹Рµ
 static inline void screen_to_space(SpacePosition *position, float x, float y)
 {
     float k = 2.0f * ROOM_H * ROOM_W * SK45;
@@ -60,7 +60,7 @@ static inline void screen_to_space(SpacePosition *position, float x, float y)
     position->y = -(x * HYP2 * ROOM_H - HYP2 * LC_OFST * ROOM_H + HYP2 * ROOM_W * (TC_OFST - y)) / k;
 }
 
-// Выбор ячейки по экранным координатам
+// Р’С‹Р±РѕСЂ СЏС‡РµР№РєРё РїРѕ СЌРєСЂР°РЅРЅС‹Рј РєРѕРѕСЂРґРёРЅР°С‚Р°Рј
 static inline void screen_to_field(int *fx, int *fy, float sx, float sy)
 {
     SpacePosition position;
@@ -164,30 +164,30 @@ bool FrameFunc()
 {
     float mx, my;
 
-    // Для антифликинга
+    // Р”Р»СЏ Р°РЅС‚РёС„Р»РёРєРёРЅРіР°
     static bool lb_down = false;
     static bool rb_down = false;
 
     float dt = hge->Timer_GetDelta();
     if (dt > MAX_TIME_FRACT)
-        dt = MAX_TIME_FRACT; // Замедляем время, если машина не успевает считать
+        dt = MAX_TIME_FRACT; // Р—Р°РјРµРґР»СЏРµРј РІСЂРµРјСЏ, РµСЃР»Рё РјР°С€РёРЅР° РЅРµ СѓСЃРїРµРІР°РµС‚ СЃС‡РёС‚Р°С‚СЊ
 
     if (the_state != gsINPROGRESS)
     {
-        // Обработка таймаута вывода баннеров выигрыша/поражения
+        // РћР±СЂР°Р±РѕС‚РєР° С‚Р°Р№РјР°СѓС‚Р° РІС‹РІРѕРґР° Р±Р°РЅРЅРµСЂРѕРІ РІС‹РёРіСЂС‹С€Р°/РїРѕСЂР°Р¶РµРЅРёСЏ
         if (banner_timeout > 0.0f)
         {
             banner_timeout -= dt;
             if (banner_timeout <= 0.0f)
             {
-                // Снимаем баннер и настраиваем уровень
+                // РЎРЅРёРјР°РµРј Р±Р°РЅРЅРµСЂ Рё РЅР°СЃС‚СЂР°РёРІР°РµРј СѓСЂРѕРІРµРЅСЊ
                 the_state = gsINPROGRESS;
                 worldSetup();
             }
         }
         else
         {
-            // Показываем баннер и выполняем базовые настройки при по смене состояния
+            // РџРѕРєР°Р·С‹РІР°РµРј Р±Р°РЅРЅРµСЂ Рё РІС‹РїРѕР»РЅСЏРµРј Р±Р°Р·РѕРІС‹Рµ РЅР°СЃС‚СЂРѕР№РєРё РїСЂРё РїРѕ СЃРјРµРЅРµ СЃРѕСЃС‚РѕСЏРЅРёСЏ
             banner_timeout = BANNER_TOUT;
             switch (the_state)
             {
@@ -204,7 +204,7 @@ bool FrameFunc()
     }
     else
     {
-        stateCheck(); // Оцениваем состояние игры
+        stateCheck(); // РћС†РµРЅРёРІР°РµРј СЃРѕСЃС‚РѕСЏРЅРёРµ РёРіСЂС‹
     }
 
     if (hge->Input_GetKeyState(HGEK_ESCAPE)) return true;
@@ -212,7 +212,7 @@ bool FrameFunc()
     {
         if (!the_character->path_requested && pathReadyCheck() && !lb_down)
         {
-            // Будем идти в указанную позицию
+            // Р‘СѓРґРµРј РёРґС‚Рё РІ СѓРєР°Р·Р°РЅРЅСѓСЋ РїРѕР·РёС†РёСЋ
             hge->Input_GetMousePos(&mx, &my);
             pathChange(mx, my);
             lb_down = true;
@@ -225,11 +225,11 @@ bool FrameFunc()
 
         if (!the_character->path_requested && pathReadyCheck() && !rb_down)
         {
-            // Пытаемся изменить состояние ячейки "свободна"/"препятствие"
+            // РџС‹С‚Р°РµРјСЃСЏ РёР·РјРµРЅРёС‚СЊ СЃРѕСЃС‚РѕСЏРЅРёРµ СЏС‡РµР№РєРё "СЃРІРѕР±РѕРґРЅР°"/"РїСЂРµРїСЏС‚СЃС‚РІРёРµ"
             hge->Input_GetMousePos(&mx, &my);
             if (cellFlip(mx, my))
             {
-                // При необходимости обсчитываем изменения пути
+                // РџСЂРё РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё РѕР±СЃС‡РёС‚С‹РІР°РµРј РёР·РјРµРЅРµРЅРёСЏ РїСѓС‚Рё
                 if (the_character->way.path.length() > 0)
                     the_character->way_new_request(the_character->way.target.x, the_character->way.target.y);
             }
@@ -243,8 +243,8 @@ bool FrameFunc()
         the_character->path_requested = false;
         the_character->way_new_process();
     }
-    moveDo(dt); // Рассчитываем изменения
-    soundsPlay(); // Воспроизводим звуки
+    moveDo(dt); // Р Р°СЃСЃС‡РёС‚С‹РІР°РµРј РёР·РјРµРЅРµРЅРёСЏ
+    soundsPlay(); // Р’РѕСЃРїСЂРѕРёР·РІРѕРґРёРј Р·РІСѓРєРё
     return false;
 }
 
@@ -254,7 +254,7 @@ bool RenderFunc()
     hge->Gfx_BeginScene();
     bgspr->RenderStretch(0, 0, float(SCREEN_W), float(SCREEN_H));
     fieldDraw();
-    // Отображаем игровую информацию
+    // РћС‚РѕР±СЂР°Р¶Р°РµРј РёРіСЂРѕРІСѓСЋ РёРЅС„РѕСЂРјР°С†РёСЋ
     fnt->printf(float(LC_OFST), float(LC_OFST), HGETEXT_LEFT, "Level %d", level + 1);
     switch (the_state)
     {
@@ -270,7 +270,7 @@ bool RenderFunc()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Отрисовка тайла в позиции ячейки
+// РћС‚СЂРёСЃРѕРІРєР° С‚Р°Р№Р»Р° РІ РїРѕР·РёС†РёРё СЏС‡РµР№РєРё
 static void tileDraw(hgeSprite *spr, int cx, int cy, float scale)
 {
     SpacePosition position;
@@ -280,10 +280,10 @@ static void tileDraw(hgeSprite *spr, int cx, int cy, float scale)
     spr->RenderEx(x, y, 0.0f, scale, scale);
 }
 
-// Отрисовка игрового поля
+// РћС‚СЂРёСЃРѕРІРєР° РёРіСЂРѕРІРѕРіРѕ РїРѕР»СЏ
 static void fieldDraw()
 {
-    // Рисуем пол
+    // Р РёСЃСѓРµРј РїРѕР»
     for (int y = 0; y < WORLD_DIM; y++)
         for (int x = 0; x < WORLD_DIM; x++)
         {
@@ -292,12 +292,12 @@ static void fieldDraw()
             if (the_field.cells[y][x].attribs.count(Cell::atrEXIT) > 0)
                 tileDraw(epspr, x, y, SPR_SCALE);
         };
-    // Рисуем стены
+    // Р РёСЃСѓРµРј СЃС‚РµРЅС‹
     for (int i = 0; i < WORLD_DIM; i++)
         tileDraw(rwspr, i, 0, SPR_SCALE);
     for (int i = 0; i < WORLD_DIM; i++)
         tileDraw(lwspr, 0, i, SPR_SCALE);
-    // Рисуем пушки
+    // Р РёСЃСѓРµРј РїСѓС€РєРё
     for (Artillery::Settings::iterator it = the_artillery.setting.begin(); it != the_artillery.setting.end(); ++it)
     {
         if (abs(it->speed.x) < FLT_EPSILON)
@@ -305,7 +305,7 @@ static void fieldDraw()
         else
             tileDraw(lbspr, it->position.x, it->position.y, SPR_SCALE);
     }
-    // Заполняем список юнитов с их экранными координатами
+    // Р—Р°РїРѕР»РЅСЏРµРј СЃРїРёСЃРѕРє СЋРЅРёС‚РѕРІ СЃ РёС… СЌРєСЂР°РЅРЅС‹РјРё РєРѕРѕСЂРґРёРЅР°С‚Р°РјРё
     ScreenPositions positions;
     ScreenPos upos;
     for (UnitsList::iterator it = the_alives.begin(); it != the_alives.end(); ++it)
@@ -314,8 +314,8 @@ static void fieldDraw()
         upos.unit = *it;
         positions.push_back(upos);
     }
-    std::sort(positions.begin(), positions.end()); // Сортируем по экранному y
-    // Рисуем юниты от дальних к ближним
+    std::sort(positions.begin(), positions.end()); // РЎРѕСЂС‚РёСЂСѓРµРј РїРѕ СЌРєСЂР°РЅРЅРѕРјСѓ y
+    // Р РёСЃСѓРµРј СЋРЅРёС‚С‹ РѕС‚ РґР°Р»СЊРЅРёС… Рє Р±Р»РёР¶РЅРёРј
     for (ScreenPositions::iterator it = positions.begin(); it != positions.end(); ++it)
     {
         switch (it->unit->id()) {
@@ -334,7 +334,7 @@ static void fieldDraw()
     }
 }
 
-// Изменение состояния указанной мышкой ячейки
+// РР·РјРµРЅРµРЅРёРµ СЃРѕСЃС‚РѕСЏРЅРёСЏ СѓРєР°Р·Р°РЅРЅРѕР№ РјС‹С€РєРѕР№ СЏС‡РµР№РєРё
 static bool cellFlip(float mx, float my)
 {
     int x, y, cx, cy;
@@ -349,7 +349,7 @@ static bool cellFlip(float mx, float my)
     return true;
 }
 
-// Ищем новый путь
+// РС‰РµРј РЅРѕРІС‹Р№ РїСѓС‚СЊ
 static void pathChange(float mx, float my)
 {
     int x, y;

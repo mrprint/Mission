@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "settings.h"
 
 extern HGE *hge;

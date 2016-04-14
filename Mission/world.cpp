@@ -1,4 +1,4 @@
-#include <math.h>
+п»ї#include <math.h>
 #include <random>
 #include <vector>
 #include <algorithm>
@@ -21,7 +21,7 @@ std::uniform_real_distribution<float> rand_distrib(0.0f, 1.0f);
 template<class RandomIt, class UniformRandomNumberGenerator>
 void shuffle(RandomIt, RandomIt, UniformRandomNumberGenerator&&);
 
-// Мелкие вспомогательные функции
+// РњРµР»РєРёРµ РІСЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Рµ С„СѓРЅРєС†РёРё
 static inline bool rnd_choice(float possib)
 {
     return rand_distrib(rand_gen) < possib;
@@ -120,7 +120,7 @@ void Unit::move(float tdelta)
 Character::Character() : Unit()
 {
     path_requested = false;
-    way.path = ""; // Стоит на месте
+    way.path = ""; // РЎС‚РѕРёС‚ РЅР° РјРµСЃС‚Рµ
     way.target.x = 0;
     way.target.y = 0;
 }
@@ -135,7 +135,7 @@ void Character::move(float tdelta)
 {
     int x, y, dx, dy;
     if (the_state == gsINPROGRESS)
-        // Перемещаемся только во время игры
+        // РџРµСЂРµРјРµС‰Р°РµРјСЃСЏ С‚РѕР»СЊРєРѕ РІРѕ РІСЂРµРјСЏ РёРіСЂС‹
         Unit::move(tdelta);
     if (way.path.length() == 0)
         return;
@@ -144,11 +144,11 @@ void Character::move(float tdelta)
         || speed.y > 0.0f && position.y >= way.neigpos.y
         || speed.y < 0.0f && position.y <= way.neigpos.y)
     {
-        // Этап завершен
+        // Р­С‚Р°Рї Р·Р°РІРµСЂС€РµРЅ
         position = way.neigpos;
         if (way.stage >= way.path.length() - 1)
         {
-            // Цель достигнута
+            // Р¦РµР»СЊ РґРѕСЃС‚РёРіРЅСѓС‚Р°
             way.path = "";
             way.stage = 0;
             Field::pos_to_cell(&x, &y, position);
@@ -157,7 +157,7 @@ void Character::move(float tdelta)
         }
         else
         {
-            // Следующий этап
+            // РЎР»РµРґСѓСЋС‰РёР№ СЌС‚Р°Рї
             Field::pos_to_cell(&x, &y, position);
             ++way.stage;
             pathDirection(&dx, &dy, way.path.at(way.stage));
@@ -198,7 +198,7 @@ void Character::set_speed()
     }
 }
 
-// Запрос обсчета пути
+// Р—Р°РїСЂРѕСЃ РѕР±СЃС‡РµС‚Р° РїСѓС‚Рё
 void Character::way_new_request(int tx, int ty)
 {
     int x, y;
@@ -211,7 +211,7 @@ void Character::way_new_request(int tx, int ty)
     path_requested = true;
 }
 
-// Обработка рассчитанного пути
+// РћР±СЂР°Р±РѕС‚РєР° СЂР°СЃСЃС‡РёС‚Р°РЅРЅРѕРіРѕ РїСѓС‚Рё
 void Character::way_new_process()
 {
     int x, y, dx, dy;
@@ -256,7 +256,7 @@ static void artillerySet(int x, int y, float spx, float spy, float delay)
     }
 }
 
-// Инициализация вселенной
+// РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РІСЃРµР»РµРЅРЅРѕР№
 void worldSetup()
 {
     int i;
@@ -264,28 +264,28 @@ void worldSetup()
 
     listsClear();
 
-    // Размечаем поле
+    // Р Р°Р·РјРµС‡Р°РµРј РїРѕР»Рµ
     for (int y = 0; y < WORLD_DIM; y++)
         for (int x = 0; x < WORLD_DIM; x++)
             the_field.cells[y][x].attribs.clear();
-    the_field.cells[0][WORLD_DIM - 1].attribs.insert(Cell::atrEXIT); // Позиция выхода
-    the_field.cells[2][0].attribs.insert(Cell::atrGUARDFORW); // Вешка направления движения охраны
-    the_field.cells[2][WORLD_DIM - 1].attribs.insert(Cell::atrGUARDBACKW); // Вешка направления движения охраны
-    // Главный герой
+    the_field.cells[0][WORLD_DIM - 1].attribs.insert(Cell::atrEXIT); // РџРѕР·РёС†РёСЏ РІС‹С…РѕРґР°
+    the_field.cells[2][0].attribs.insert(Cell::atrGUARDFORW); // Р’РµС€РєР° РЅР°РїСЂР°РІР»РµРЅРёСЏ РґРІРёР¶РµРЅРёСЏ РѕС…СЂР°РЅС‹
+    the_field.cells[2][WORLD_DIM - 1].attribs.insert(Cell::atrGUARDBACKW); // Р’РµС€РєР° РЅР°РїСЂР°РІР»РµРЅРёСЏ РґРІРёР¶РµРЅРёСЏ РѕС…СЂР°РЅС‹
+    // Р“Р»Р°РІРЅС‹Р№ РіРµСЂРѕР№
     the_alives.push_front(new Character());
     the_character = static_cast<Character*>(*the_alives.begin());
     Field::cell_to_pos(&the_character->position, 0, WORLD_DIM - 1);
     the_character->way.target.x = 0;
     the_character->way.target.y = WORLD_DIM - 1;
     the_character->set_speed();
-    // Стража
+    // РЎС‚СЂР°Р¶Р°
     the_alives.push_front(new Guard());
     unit = *the_alives.begin();
     Field::cell_to_pos(&unit->position, 0, 2);
     unit->size = U_SIZE * 1.5f;
     unit->speed.x = GUARD_B_SPEED;
     unit->speed.y = 0.0f;
-    // Артиллерия
+    // РђСЂС‚РёР»Р»РµСЂРёСЏ
     Artillery::Settings apositions(WORLD_DIM * 2 - 2);
     for (i = 0; i < WORLD_DIM - 1; i++)
     {
@@ -308,11 +308,11 @@ void worldSetup()
         the_artillery.setting.push_back(apositions[i]);
 }
 
-// Изменения в состоянии мира за отведённый квант времени
+// РР·РјРµРЅРµРЅРёСЏ РІ СЃРѕСЃС‚РѕСЏРЅРёРё РјРёСЂР° Р·Р° РѕС‚РІРµРґС‘РЅРЅС‹Р№ РєРІР°РЅС‚ РІСЂРµРјРµРЅРё
 void moveDo(float tdelta)
 {
     Unit *unit;
-    // Перемещаем существующие юниты и удаляем отжившие
+    // РџРµСЂРµРјРµС‰Р°РµРј СЃСѓС‰РµСЃС‚РІСѓСЋС‰РёРµ СЋРЅРёС‚С‹ Рё СѓРґР°Р»СЏРµРј РѕС‚Р¶РёРІС€РёРµ
     for (UnitsList::iterator it = the_alives.begin(); it != the_alives.end();)
     {
         (*it)->move(tdelta);
@@ -324,7 +324,7 @@ void moveDo(float tdelta)
         else
             ++it;
     }
-    // Генерируем новые выстрелы
+    // Р“РµРЅРµСЂРёСЂСѓРµРј РЅРѕРІС‹Рµ РІС‹СЃС‚СЂРµР»С‹
     for (Artillery::Settings::iterator it = the_artillery.setting.begin(); it != the_artillery.setting.end(); ++it)
     {
         it->timeout -= tdelta;
@@ -345,7 +345,7 @@ void moveDo(float tdelta)
     }
 }
 
-// Проверка состояния игры
+// РџСЂРѕРІРµСЂРєР° СЃРѕСЃС‚РѕСЏРЅРёСЏ РёРіСЂС‹
 void stateCheck()
 {
     int x, y;
@@ -367,7 +367,7 @@ void stateCheck()
     }
 }
 
-// Очистка всех списков
+// РћС‡РёСЃС‚РєР° РІСЃРµС… СЃРїРёСЃРєРѕРІ
 void listsClear()
 {
     for (UnitsList::iterator it = the_alives.begin(); it != the_alives.end(); ++it)
@@ -377,7 +377,7 @@ void listsClear()
     the_sounds.clear();
 }
 
-// Реализация отсутствующего в VS2010 std::shuffle
+// Р РµР°Р»РёР·Р°С†РёСЏ РѕС‚СЃСѓС‚СЃС‚РІСѓСЋС‰РµРіРѕ РІ VS2010 std::shuffle
 template<class RandomIt, class UniformRandomNumberGenerator>
 static void shuffle(RandomIt first, RandomIt last,
     UniformRandomNumberGenerator&& g)
