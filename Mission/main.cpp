@@ -9,13 +9,14 @@
 #include "world.h"
 #include "pathfinding.h"
 
-typedef struct {
+struct PathQueryInfo // Структура для межпотокового обмена
+{
     Field *field;
     int xStart, yStart, xFinish, yFinish;
     std::string path;
     volatile bool done_flag; // Неограждаемый, т.к. изменяется только один раз
     volatile bool ready_flag;
-} PathQueryInfo; // Структура для межпотокового обмена
+};
 
 PathQueryInfo path_query_info = {NULL, 0, 0, 0, 0, "", false, true};
 uintptr_t upThread;
