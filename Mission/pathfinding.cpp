@@ -1,12 +1,7 @@
 // Реализация A-star
 // Взято с http://code.activestate.com/recipes/577457-a-star-shortest-path-algorithm/ и адаптировано
 
-#include <iostream>
-#include <iomanip>
 #include <queue>
-#include <string>
-#include <math.h>
-#include <ctime>
 
 #include "settings.h"
 #include "world.h"

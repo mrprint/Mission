@@ -51,9 +51,9 @@ public:
     typedef std::set<Attribute> Attributes;
 
     // Позиция на игровом поле
-    typedef struct {
+    struct Coordinates {
         int x, y;
-    } Coordinates;
+    };
 
     std::set<Attribute> attribs;
 
@@ -109,13 +109,12 @@ class Character : public Unit
 public:
 
     // Характеристики пути к цели
-    typedef struct
-    {
+    struct Target {
         Cell::Coordinates neighbour, target; // Ближайшая ячейка на пути и целевая
         SpacePosition neigpos; // Пространственные координаты центра ближайшей ячейки
         std::string path; // Список директив смены направления
         unsigned stage; // Этап на пути
-    } Target;
+    };
 
     Target way; // Набор характеристик пути к цели
     bool path_requested; // Обсчитывается путь
@@ -138,7 +137,7 @@ public:
 };
 
 // Выстрел
-class Fireball : public Unit 
+class Fireball : public Unit
 {
     virtual Type id() { return utFireball; }
 };
@@ -150,12 +149,12 @@ class Artillery
 public:
 
     // Настройки ведения огня
-    typedef struct {
+    struct Setting {
         Cell::Coordinates position;
         Speed speed;
         float delay;
         float timeout;
-    } Setting;
+    };
 
     typedef std::vector<Setting> Settings;
 
@@ -167,13 +166,12 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 // Характеристики пути к цели
-typedef struct
-{
+struct CharacterTarget {
     Cell::Coordinates neighbour, target; // Ближайшая ячейка на пути и целевая
     SpacePosition neigpos; // Пространственные координаты центра ближайшей ячейки
     std::string path; // Список директив смены направления
     unsigned stage; // Этап на пути
-} CharacterTarget;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Основные объекты

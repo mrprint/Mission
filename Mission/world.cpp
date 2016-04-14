@@ -382,10 +382,10 @@ template<class RandomIt, class UniformRandomNumberGenerator>
 static void shuffle(RandomIt first, RandomIt last,
     UniformRandomNumberGenerator&& g)
 {
-    typedef typename std::iterator_traits<RandomIt>::difference_type diff_t;
-    typedef typename std::make_unsigned<diff_t>::type udiff_t;
-    typedef typename std::uniform_int_distribution<udiff_t> distr_t;
-    typedef typename distr_t::param_type param_t;
+    typedef std::iterator_traits<RandomIt>::difference_type diff_t;
+    typedef std::make_unsigned<diff_t>::type udiff_t;
+    typedef std::uniform_int_distribution<udiff_t> distr_t;
+    typedef distr_t::param_type param_t;
 
     distr_t D;
     diff_t n = last - first;
