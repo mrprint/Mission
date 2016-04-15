@@ -212,3 +212,6 @@ _Pvt_Extensions/
 ModelManifest.xml
 *.opendb
 *.db
+
+# Custom
+distro/[Mm]ission.exe
