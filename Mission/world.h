@@ -3,7 +3,6 @@
 #include <random>
 #include <deque>
 #include <set>
-#include <list>
 #include <vector>
 #include "settings.h"
 
@@ -101,7 +100,7 @@ public:
     virtual void move(float); // Осуществляем ход
 };
 
-typedef std::list<Unit*> UnitsList; // Группа юнитов
+typedef std::vector<Unit*> UnitsList; // Группа юнитов
 
 // Главный герой
 class Character : public Unit
