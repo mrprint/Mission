@@ -103,7 +103,7 @@ Unit::Unit(const Unit& unit)
     speed = unit.speed;
 }
 
-bool Unit::is_collided(const Unit& unit)
+bool Unit::is_collided(const Unit& unit) const
 {
     float a = position.x - unit.position.x;
     float b = position.y - unit.position.y;
@@ -120,7 +120,7 @@ void Unit::move(float tdelta)
 Character::Character() : Unit()
 {
     path_requested = false;
-    way.path = ""; // Стоит на месте
+    way.path.clear(); // Стоит на месте
     way.target.x = 0;
     way.target.y = 0;
 }
@@ -133,11 +133,12 @@ Character::Character(const Character& character) : Unit(character)
 
 void Character::move(float tdelta)
 {
-    int x, y, dx, dy;
+    Cell::Coordinates delta;
+    int x, y;
     if (the_state == gsINPROGRESS)
         // Перемещаемся только во время игры
         Unit::move(tdelta);
-    if (way.path.length() == 0)
+    if (way.path.size() == 0)
         return;
     if (speed.x > 0.0f && position.x >= way.neigpos.x
         || speed.x < 0.0f && position.x <= way.neigpos.x
@@ -146,10 +147,10 @@ void Character::move(float tdelta)
     {
         // Этап завершен
         position = way.neigpos;
-        if (way.stage >= way.path.length() - 1)
+        if (way.stage >= way.path.size() - 1)
         {
             // Цель достигнута
-            way.path = "";
+            way.path.clear();
             way.stage = 0;
             Field::pos_to_cell(&x, &y, position);
             way.target.x = x;
@@ -160,9 +161,9 @@ void Character::move(float tdelta)
             // Следующий этап
             Field::pos_to_cell(&x, &y, position);
             ++way.stage;
-            pathDirection(&dx, &dy, way.path.at(way.stage));
-            way.neighbour.x += dx;
-            way.neighbour.y += dy;
+            delta = way.path.at(way.path.size() - way.stage - 1);
+            way.neighbour.x += delta.x;
+            way.neighbour.y += delta.y;
             Field::cell_to_pos(&way.neigpos, way.neighbour.x, way.neighbour.y);
         }
         set_speed();
@@ -172,7 +173,7 @@ void Character::move(float tdelta)
 void Character::set_speed()
 {
     float dx, dy, adx, ady, a;
-    if (way.path.length() == 0)
+    if (way.path.size() == 0)
     {
         speed.x = 0.0f;
         speed.y = 0.0f;
@@ -182,7 +183,7 @@ void Character::set_speed()
     dy = way.neigpos.y - position.y;
     adx = abs(dx);
     ady = abs(dy);
-    if (adx < FLT_EPSILON && ady < FLT_EPSILON || way.path.length() == 0)
+    if (adx < FLT_EPSILON && ady < FLT_EPSILON || way.path.size() == 0)
         return;
     if (adx > ady)
     {
@@ -214,15 +215,16 @@ void Character::way_new_request(int tx, int ty)
 // Обработка рассчитанного пути
 void Character::way_new_process()
 {
-    int x, y, dx, dy;
+    Cell::Coordinates delta;
+    int x, y;
     way.path = pathRead();
     Field::pos_to_cell(&x, &y, position);
-    if (way.path.length() > 0)
+    if (way.path.size() > 0)
     {
         way.stage = 0;
-        pathDirection(&dx, &dy, way.path.at(0));
-        way.neighbour.x = x + dx;
-        way.neighbour.y = y + dy;
+        delta = way.path.at(way.path.size() - 1);
+        way.neighbour.x = x + delta.x;
+        way.neighbour.y = y + delta.y;
         Field::cell_to_pos(&way.neigpos, way.neighbour.x, way.neighbour.y);
     }
     set_speed();

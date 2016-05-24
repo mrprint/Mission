@@ -143,7 +143,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="pathfinding.cpp" />
     <ClCompile Include="scene.cpp" />
     <ClCompile Include="world.cpp" />
   </ItemGroup>

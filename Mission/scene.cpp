@@ -230,7 +230,7 @@ bool FrameFunc()
             if (cellFlip(mx, my))
             {
                 // При необходимости обсчитываем изменения пути
-                if (the_character->way.path.length() > 0)
+                if (the_character->way.path.size() > 0)
                     the_character->way_new_request(the_character->way.target.x, the_character->way.target.y);
             }
             rb_down = true;

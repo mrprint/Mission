@@ -12,16 +12,17 @@
 struct PathQueryInfo // Структура для межпотокового обмена
 {
     Field *field;
-    int xStart, yStart, xFinish, yFinish;
-    std::string path;
-    volatile bool done_flag; // Неограждаемый, т.к. изменяется только один раз
-    volatile bool ready_flag;
-};
+    Cell::Coordinates start, finish;
+    Path path;
+} path_query_info = { NULL, {0, 0}, {0, 0} };
 
-PathQueryInfo path_query_info = {NULL, 0, 0, 0, 0, "", false, true};
 uintptr_t upThread;
 HANDLE hEventPut;
 CRITICAL_SECTION cs;
+FieldsAStar a_star;
+
+volatile bool done_flag = false; // Неограждаемый, т.к. изменяется только один раз
+volatile bool ready_flag = true;
 
 void ready_flag_set(bool val);
 std::string expand_environment_variables(std::string);
@@ -31,16 +32,16 @@ std::string expand_environment_variables(std::string);
 // поэтому они должны явно блокироваться на соответствующих участках
 void CalcThread(void* pParams)
 {
-    std::string path;
+    //Path path;
     while (true)
     {
         WaitForSingleObject(hEventPut, INFINITE);
-        if (path_query_info.done_flag)
+        if (done_flag)
             break;
         if (!pathReadyCheck())
         {
-            path = pathFind(*path_query_info.field, path_query_info.xStart, path_query_info.yStart, path_query_info.xFinish, path_query_info.yFinish);
-            path_query_info.path = path;
+            a_star.search_ofs(&path_query_info.path, *path_query_info.field, path_query_info.start, path_query_info.finish);
+            //path_query_info.path = path;
             ready_flag_set(true);
         }
     }
@@ -75,7 +76,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         sceneSetup();
         hge->System_Start();
         // Останавливаем вспомогательный поток
-        path_query_info.done_flag = true;
+        done_flag = true;
         SetEvent(hEventPut);
         WaitForSingleObject(reinterpret_cast<HANDLE>(upThread), INFINITE);
         CloseHandle(hEventPut);
@@ -101,10 +102,10 @@ void pathFindRequest(const Field &field, int xStart, int yStart, int xFinish, in
     if (pathReadyCheck())
     {
         path_query_info.field = const_cast<Field*>(&field);
-        path_query_info.xStart = xStart;
-        path_query_info.yStart = yStart;
-        path_query_info.xFinish = xFinish;
-        path_query_info.yFinish = yFinish;
+        path_query_info.start.x = xStart;
+        path_query_info.start.y = yStart;
+        path_query_info.finish.x = xFinish;
+        path_query_info.finish.y = yFinish;
         ready_flag_set(false);
     }
     SetEvent(hEventPut);
@@ -115,15 +116,9 @@ bool pathReadyCheck()
 {
     bool ready;
     EnterCriticalSection(&cs);
-    ready = path_query_info.ready_flag;
+    ready = ready_flag;
     LeaveCriticalSection(&cs);
     return ready;
-}
-
-// Получение результата
-std::string pathRead()
-{
-    return path_query_info.path;
 }
 
 // Огороженная установка флага готовности результата
@@ -132,8 +127,14 @@ std::string pathRead()
 static void ready_flag_set(bool val)
 {
     EnterCriticalSection(&cs);
-    path_query_info.ready_flag = val;
+    ready_flag = val;
     LeaveCriticalSection(&cs);
+}
+
+// Получение результата
+Path pathRead()
+{
+    return path_query_info.path;
 }
 
 // Универсальная распаковка переменных системы в пути
