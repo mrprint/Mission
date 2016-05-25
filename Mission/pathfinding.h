@@ -144,7 +144,6 @@ protected:
 
     void get_path_ofs(TPath *path, const TCoords& start_p, const TCoords& finish_p)
     {
-        path->clear();
         size_t ci = index2d(finish_p.x, finish_p.y);
         size_t si = index2d(start_p.x, start_p.y);
         while (ci != si)

@@ -40,8 +40,8 @@ void CalcThread(void* pParams)
             break;
         if (!pathReadyCheck())
         {
+            path_query_info.path.clear();
             a_star.search_ofs(&path_query_info.path, *path_query_info.field, path_query_info.start, path_query_info.finish);
-            //path_query_info.path = path;
             ready_flag_set(true);
         }
     }
