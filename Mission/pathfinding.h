@@ -2,8 +2,6 @@
 
 #include <vector>
 #include <queue>
-#include <functional>
-#include <math.h>
 
 using namespace std;
 
