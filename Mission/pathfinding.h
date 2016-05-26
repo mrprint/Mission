@@ -24,9 +24,9 @@ protected:
     struct Attributes // Атрибуты позиции
     {
         TWeight fscore, gscore;
-        unsigned ofsx : 3;
-        unsigned ofsy : 3;
-        State state : 2;
+        unsigned char ofsx;
+        unsigned char ofsy;
+        unsigned char state;
     };
 
     Attributes *attrs;
