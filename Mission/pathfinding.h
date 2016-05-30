@@ -3,13 +3,12 @@
 #include <vector>
 #include <queue>
 
-using namespace std;
-
-template<size_t H, size_t W, // Размерность карты
+template<
+    size_t H, size_t W, // Размерность карты
     typename TCoords, // Тип координат, предоставляющий члены "x" и "y". Со знаком.
     typename TMap, // Карта. Предоставляет "isobstacle(x, y)"
     typename TWeight = int, // Тип веса
-    typename TPath = vector<TCoords> // Возвращаемый путь, предоставляющий push_back
+    typename TPath = std::vector<TCoords> // Возвращаемый путь, предоставляющий push_back
 >
 class AStar
 {
@@ -40,8 +39,8 @@ protected:
         inline bool operator> (const AttrsPtr& r) const { return r.pa->fscore < pa->fscore; }
     };
 
-    ::priority_queue<AttrsPtr, ::vector<AttrsPtr>, ::greater<AttrsPtr>> opened;
-    ::vector<AttrsPtr> temp_buff; // Для переупорядочивания
+    std::priority_queue<AttrsPtr, std::vector<AttrsPtr>, std::greater<AttrsPtr>> opened;
+    std::vector<AttrsPtr> temp_buff; // Для переупорядочивания
 
 public:
 
