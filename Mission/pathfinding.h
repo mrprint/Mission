@@ -157,7 +157,7 @@ protected:
     {
         get_path_ofs(path, start_p, finish_p);
         TCoords cp = start_p;
-        for (::vector<TCoords>::reverse_iterator it = path->rbegin(); it != path->rend(); ++it)
+        for (std::vector<TCoords>::reverse_iterator it = path->rbegin(); it != path->rend(); ++it)
         {
             cp.x += it->x;
             cp.y += it->y;
