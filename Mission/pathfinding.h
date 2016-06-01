@@ -23,8 +23,8 @@ protected:
     struct Attributes // Атрибуты позиции
     {
         TWeight fscore, gscore;
-        unsigned char ofsx;
-        unsigned char ofsy;
+        char ofsx;
+        char ofsy;
         unsigned char state;
     };
 
@@ -103,8 +103,8 @@ protected:
                         continue;
                     rearrange(&(attrs[ni]), t_gscore + cost_estimate(npos, finish_p));
                 }
-                attrs[ni].ofsx = dx + 1;
-                attrs[ni].ofsy = dy + 1;
+                attrs[ni].ofsx = dx;
+                attrs[ni].ofsy = dy;
                 attrs[ni].gscore = t_gscore;
             }
         }
@@ -146,8 +146,8 @@ protected:
         while (ci != si)
         {
             TCoords p;
-            p.x = attrs[ci].ofsx - 1;
-            p.y = attrs[ci].ofsy - 1;
+            p.x = attrs[ci].ofsx;
+            p.y = attrs[ci].ofsy;
             path->push_back(p);
             ci -= W * p.y + p.x;
         }
