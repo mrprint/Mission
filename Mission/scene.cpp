@@ -35,7 +35,6 @@ hgeSprite *bgspr, *tlspr, *lwspr, *rwspr, *lbspr, *rbspr, *fbspr, *epspr, *lgspr
 hgeFont *fnt;
 
 void tileDraw(hgeSprite*, int, int, float);
-void unitDraw(hgeSprite*, const SpacePosition&, float);
 void fieldDraw();
 void pathChange(float, float);
 bool cellFlip(float, float);
