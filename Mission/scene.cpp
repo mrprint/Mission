@@ -1,6 +1,4 @@
-﻿#include <typeinfo.h>
-#include <algorithm>
-#include <vector>
+﻿#include <vector>
 #include <hge.h>
 #include <hgefont.h>
 #include <hgeresource.h>

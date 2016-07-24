@@ -215,3 +215,5 @@ ModelManifest.xml
 
 # Custom
 distro/[Mm]ission.exe
+SFML/
+sfml/
