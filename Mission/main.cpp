@@ -158,7 +158,7 @@ static std::string expand_environment_variables(std::string s)
             return result;
         char *env = getenv(s.substr(start, end - start).c_str());
         if (env != NULL)
-            result += string(env);
+            result += env;
         start = end + 1;
     }
 }
