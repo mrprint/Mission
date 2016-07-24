@@ -137,22 +137,28 @@ Path pathRead()
     return path_query_info.path;
 }
 
-// Универсальная распаковка переменных системы в пути
-// Найдено в интернете и адаптировано
+// Распаковка переменных системы в пути
 static std::string expand_environment_variables(std::string s)
 {
     using namespace std;
-    if (s.find("${") == string::npos)
-        return s;
-    string pre = s.substr(0, s.find("${"));
-    string post = s.substr(s.find("${") + 2);
-    if (post.find('}') == string::npos)
-        return s;
-    string variable = post.substr(0, post.find('}'));
-    string value = "";
-    post = post.substr(post.find('}') + 1);
-    char *env = getenv(variable.c_str());
-    if (env != NULL)
-        value = string(env);
-    return expand_environment_variables(pre + value + post);
+    string result = "";
+    size_t found, end, start = 0;
+    while (true)
+    {
+        found = s.find("${", start);
+        if (found == string::npos)
+        {
+            result += s.substr(start);
+            return result;
+        }
+        result += s.substr(start, found - start);
+        start = found + 2;
+        end = s.find('}', start);
+        if (end == string::npos)
+            return result;
+        char *env = getenv(s.substr(start, end - start).c_str());
+        if (env != NULL)
+            result += string(env);
+        start = end + 1;
+    }
 }
