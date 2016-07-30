@@ -214,6 +214,5 @@ ModelManifest.xml
 *.db
 
 # Custom
-distro/[Mm]ission.exe
-SFML/
-sfml/
+thrdparty/SFML/
+thrdparty/sfml/
