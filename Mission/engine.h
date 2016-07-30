@@ -38,9 +38,8 @@ public:
 class Engine
 {
     enum ControlState {
-        csEXIT, 
         csLMBUTTON,
-        csRBUTTON
+        csRMBUTTON
     };
     
     sf::RenderWindow* window;
@@ -49,6 +48,7 @@ class Engine
     std::vector<SpriteInfo> sprites;
     std::vector<SoundInfo> sounds;
     std::set<ControlState> controls;
+    sf::Vector2i mouse_p;
     Orchestre played_sounds;
     float banner_timeout;
 public:

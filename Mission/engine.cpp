@@ -142,9 +142,12 @@ void Engine::frame_render()
     window->display();
 }
 
+// Обрабатываем только свой ввод
 void Engine::input_process()
 {
     sf::Event evt;
+    bool do_close = false;
+
     if (!window->isOpen())
         return;
     while (window->pollEvent(evt))
@@ -152,17 +155,46 @@ void Engine::input_process()
         switch (evt.type) 
         {
         case sf::Event::Closed:
-            window->close();
+            do_close = true;
+            break;
+        case sf::Event::KeyPressed:
+            if (evt.key.code == sf::Keyboard::Escape)
+                do_close = true;
+            break;
+        case sf::Event::MouseButtonPressed:
+            mouse_p.x = evt.mouseButton.x;
+            mouse_p.y = evt.mouseButton.y;
+            switch (evt.mouseButton.button)
+            {
+            case sf::Mouse::Left:
+                controls.insert(csLMBUTTON);
+                break;
+            case sf::Mouse::Right:
+                controls.insert(csRMBUTTON);
+                break;
+            }
+            break;
+        case sf::Event::MouseButtonReleased:
+            mouse_p.x = evt.mouseButton.x;
+            mouse_p.y = evt.mouseButton.y;
+            switch (evt.mouseButton.button)
+            {
+            case sf::Mouse::Left:
+                controls.erase(csLMBUTTON);
+                break;
+            case sf::Mouse::Right:
+                controls.erase(csRMBUTTON);
+                break;
+            }
             break;
         }
     }
+    if (do_close)
+        window->close();
 }
 
 void Engine::update(sf::Time tdelta)
 {
-    sf::Vector2i m_pos;
-    bool closefl = false;
-
     // Для антифликинга
     static bool lb_down = false;
     static bool rb_down = false;
@@ -208,28 +240,24 @@ void Engine::update(sf::Time tdelta)
         stateCheck(); // Оцениваем состояние игры
     }
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
-        closefl = true;
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && the_state == gsINPROGRESS)
+    if (controls.count(csLMBUTTON) && the_state == gsINPROGRESS)
     {
         if (!the_character->path_requested && path_ready_check() && !lb_down)
         {
             // Будем идти в указанную позицию
-            m_pos = sf::Mouse::getPosition(*window);
-            path_change(m_pos.x, m_pos.y);
+            path_change(mouse_p.x, mouse_p.y);
             lb_down = true;
         }
     }
     else
         lb_down = false;
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Right) && the_state == gsINPROGRESS)
+    if (controls.count(csRMBUTTON) && the_state == gsINPROGRESS)
     {
 
         if (!the_character->path_requested && path_ready_check() && !rb_down)
         {
             // Пытаемся изменить состояние ячейки "свободна"/"препятствие"
-            m_pos = sf::Mouse::getPosition(*window);
-            if (cell_flip(m_pos.x, m_pos.y))
+            if (cell_flip(mouse_p.x, mouse_p.y))
             {
                 // При необходимости обсчитываем изменения пути
                 if (the_character->way.path.size() > 0)
@@ -247,8 +275,6 @@ void Engine::update(sf::Time tdelta)
     }
     moveDo(dt); // Рассчитываем изменения
     sounds_play(); // Воспроизводим звуки
-    if (closefl)
-        window->close();
 }
 
 void Engine::main_loop()
