@@ -256,12 +256,12 @@ static void artillerySet(int x, int y, float spx, float spy, float delay)
 }
 
 // Инициализация вселенной
-void worldSetup()
+void world_setup()
 {
     int i;
     Unit *unit;
 
-    listsClear();
+    lists_clear();
 
     // Размечаем поле
     for (int y = 0; y < WORLD_DIM; y++)
@@ -308,7 +308,7 @@ void worldSetup()
 }
 
 // Изменения в состоянии мира за отведённый квант времени
-void moveDo(float tdelta)
+void move_do(float tdelta)
 {
     Unit *unit;
     // Перемещаем существующие юниты и удаляем отжившие
@@ -345,7 +345,7 @@ void moveDo(float tdelta)
 }
 
 // Проверка состояния игры
-void stateCheck()
+void state_check()
 {
     int x, y;
     Field::pos_to_cell(&x, &y, the_character->position);
@@ -367,7 +367,7 @@ void stateCheck()
 }
 
 // Очистка всех списков
-void listsClear()
+void lists_clear()
 {
     for (UnitsList::iterator it = the_alives.begin(); it != the_alives.end(); ++it)
         delete *it;

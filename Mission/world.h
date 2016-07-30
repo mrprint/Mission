@@ -29,10 +29,10 @@ enum SoundEvent {
 
 typedef std::deque<SoundEvent> SoundsQueue; // Очередь звуков
 
-void worldSetup();
-void moveDo(float);
-void stateCheck();
-void listsClear();
+void world_setup();
+void move_do(float);
+void state_check();
+void lists_clear();
 
 ////////////////////////////////////////////////////////////////////////////////
 // Клетка на игровом поле

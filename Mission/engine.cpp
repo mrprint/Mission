@@ -215,7 +215,7 @@ void Engine::update(sf::Time tdelta)
             {
                 // Снимаем баннер и настраиваем уровень
                 the_state = gsINPROGRESS;
-                worldSetup();
+                world_setup();
             }
         }
         else
@@ -237,7 +237,7 @@ void Engine::update(sf::Time tdelta)
     }
     else
     {
-        stateCheck(); // Оцениваем состояние игры
+        state_check(); // Оцениваем состояние игры
     }
 
     if (controls.count(csLMBUTTON) && the_state == gsINPROGRESS)
@@ -273,7 +273,7 @@ void Engine::update(sf::Time tdelta)
         the_character->path_requested = false;
         the_character->way_new_process();
     }
-    moveDo(dt); // Рассчитываем изменения
+    move_do(dt); // Рассчитываем изменения
     sounds_play(); // Воспроизводим звуки
 }
 

@@ -57,7 +57,7 @@ int main()
     {
         the_state = gsINPROGRESS;
         level = 0;
-        worldSetup();
+        world_setup();
         engine.work_do();
         // Останавливаем вспомогательный поток
         done_flag = true;
@@ -65,7 +65,7 @@ int main()
         WaitForSingleObject(reinterpret_cast<HANDLE>(upThread), INFINITE);
         CloseHandle(hEventPut);
         
-        listsClear();
+        lists_clear();
     }
     DeleteCriticalSection(&cs);
     return 0;
