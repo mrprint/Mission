@@ -18,9 +18,6 @@ SoundsQueue the_sounds;
 std::default_random_engine rand_gen;
 std::uniform_real_distribution<float> rand_distrib(0.0f, 1.0f);
 
-template<class RandomIt, class UniformRandomNumberGenerator>
-void shuffle(RandomIt, RandomIt, UniformRandomNumberGenerator&&);
-
 // Мелкие вспомогательные функции
 static inline bool rnd_choice(float possib)
 {
@@ -208,7 +205,7 @@ void Character::way_new_request(int tx, int ty)
     Field::pos_to_cell(&x, &y, position);
     way.target.x = tx;
     way.target.y = ty;
-    pathFindRequest(the_field, x, y, tx, ty);
+    path_find_request(the_field, x, y, tx, ty);
     path_requested = true;
 }
 
@@ -217,7 +214,7 @@ void Character::way_new_process()
 {
     Cell::Coordinates delta;
     int x, y;
-    way.path = pathRead();
+    way.path = path_read();
     Field::pos_to_cell(&x, &y, position);
     if (way.path.size() > 0)
     {
@@ -304,8 +301,8 @@ void worldSetup()
         apositions[WORLD_DIM - 1 + i].delay = deviation_apply(ART_B_DELAY, ART_DEV);
         apositions[WORLD_DIM - 1 + i].timeout = 0.0f;
     }
-    shuffle(apositions.begin(), apositions.end(), rand_gen);
-    int acount = min(complexity_apply(ART_COUNT, LEVEL_COMPL), int(apositions.capacity()));
+    std::shuffle(apositions.begin(), apositions.end(), rand_gen);
+    int acount = std::min(complexity_apply(ART_COUNT, LEVEL_COMPL), int(apositions.capacity()));
     for (i = 0; i < acount; i++)
         the_artillery.setting.push_back(apositions[i]);
 }
@@ -377,22 +374,4 @@ void listsClear()
     the_alives.clear();
     the_artillery.setting.clear();
     the_sounds.clear();
-}
-
-// Реализация отсутствующего в VS2010 std::shuffle
-template<class RandomIt, class UniformRandomNumberGenerator>
-static void shuffle(RandomIt first, RandomIt last,
-    UniformRandomNumberGenerator&& g)
-{
-    typedef std::iterator_traits<RandomIt>::difference_type diff_t;
-    typedef std::make_unsigned<diff_t>::type udiff_t;
-    typedef std::uniform_int_distribution<udiff_t> distr_t;
-    typedef distr_t::param_type param_t;
-
-    distr_t D;
-    diff_t n = last - first;
-    for (diff_t i = n - 1; i > 0; --i) {
-        using std::swap;
-        swap(first[i], first[D(g, param_t(0, i))]);
-    }
 }

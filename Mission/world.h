@@ -14,18 +14,18 @@ SpacePosition, // Положение в пространстве, где -1.0 с
 Speed; // Скорость
 
 // Состояние игры
-typedef enum {
+enum GameState {
     gsINPROGRESS,
     gsLOSS,
     gsWIN
-} GameState;
+};
 
 // Звуковое событие
-typedef enum {
+enum SoundEvent {
     seSHOT,
     seHIT,
     seLVLUP
-} SoundEvent;
+};
 
 typedef std::deque<SoundEvent> SoundsQueue; // Очередь звуков
 
@@ -41,12 +41,12 @@ class Cell
 public:
 
     // Какие-либо атрибуты клетки
-    typedef enum {
+    enum Attribute {
         atrOBSTACLE, // "Препятствие"
         atrEXIT, // Зона выхода
         atrGUARDFORW, // Охране вперёд
         atrGUARDBACKW // Охране назад
-    } Attribute;
+    };
 
     typedef std::set<Attribute> Attributes;
 
@@ -90,12 +90,12 @@ class Unit
 public:
 
     // Спецификация юнита
-    typedef enum {
+    enum Type {
         utUnit,      // Базовый тип
         utCharacter, // Главный герой
         utGuard,     // Стажник
         utFireball   // Выстрел
-    } Type;
+    };
 
     float size;  // Радиус юнита
     SpacePosition position;  // Положение в двухмерном пространстве
@@ -103,6 +103,7 @@ public:
 
     Unit();
     Unit(const Unit&);
+    virtual ~Unit() {} // Обеспечиваем полноценную деструкцию наследников
     virtual Type id() const { return utUnit; } // Получить тип юнита (RTTI не используем)
     bool is_collided(const Unit&) const; // Столкнулись ли с другим юнитом
     virtual void move(float); // Осуществляем ход

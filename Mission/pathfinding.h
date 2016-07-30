@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include <functional>
 #include <vector>
 #include <queue>
 
@@ -34,7 +35,7 @@ protected:
     {
         Attributes *pa;
         TCoords pos;
-        AttrsPtr() { ; }
+        AttrsPtr() {}
         AttrsPtr(const TCoords& p, Attributes *attrs) { pos = p; pa = &(attrs[index2d(pos.x, pos.y)]); }
         inline bool operator> (const AttrsPtr& r) const { return r.pa->fscore < pa->fscore; }
     };
