@@ -1,4 +1,6 @@
-﻿#include <stdio.h>
+﻿#include <limits>
+#include <stdio.h>
+#include <math.h>  
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include "engine.h"
@@ -152,7 +154,7 @@ void Engine::input_process()
         return;
     while (window->pollEvent(evt))
     {
-        switch (evt.type) 
+        switch (evt.type)
         {
         case sf::Event::Closed:
             do_close = true;
@@ -333,7 +335,7 @@ void Engine::field_draw()
     // Рисуем пушки
     for (Artillery::Settings::iterator it = the_artillery.setting.begin(); it != the_artillery.setting.end(); ++it)
     {
-        if (abs(it->speed.x) < FLT_EPSILON)
+        if (fabs(it->speed.x) < std::numeric_limits<float>::epsilon())
             tile_draw(&sprites[rbspr].sprite, it->position.x, it->position.y, SPR_SCALE);
         else
             tile_draw(&sprites[lbspr].sprite, it->position.x, it->position.y, SPR_SCALE);

@@ -137,10 +137,10 @@ void Character::move(float tdelta)
         Unit::move(tdelta);
     if (way.path.size() == 0)
         return;
-    if (speed.x > 0.0f && position.x >= way.neigpos.x
-        || speed.x < 0.0f && position.x <= way.neigpos.x
-        || speed.y > 0.0f && position.y >= way.neigpos.y
-        || speed.y < 0.0f && position.y <= way.neigpos.y)
+    if ((speed.x > 0.0f && position.x >= way.neigpos.x)
+        || (speed.x < 0.0f && position.x <= way.neigpos.x)
+        || (speed.y > 0.0f && position.y >= way.neigpos.y)
+        || (speed.y < 0.0f && position.y <= way.neigpos.y))
     {
         // Этап завершен
         position = way.neigpos;
@@ -180,7 +180,7 @@ void Character::set_speed()
     dy = way.neigpos.y - position.y;
     adx = abs(dx);
     ady = abs(dy);
-    if (adx < FLT_EPSILON && ady < FLT_EPSILON || way.path.size() == 0)
+    if ((adx < std::numeric_limits<float>::epsilon() && ady < std::numeric_limits<float>::epsilon()) || way.path.size() == 0)
         return;
     if (adx > ady)
     {
@@ -240,21 +240,6 @@ void Guard::move(float tdelta)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-static void artillerySet(int x, int y, float spx, float spy, float delay)
-{
-    Artillery::Setting artst;
-    if (rnd_choice(ART_B_POSSIB))
-    {
-        artst.position.x = x;
-        artst.position.y = y;
-        artst.speed.x = spx;
-        artst.speed.y = spy;
-        artst.delay = delay;
-        artst.timeout = 0.0f;
-        the_artillery.setting.push_back(artst);
-    }
-}
-
 // Инициализация вселенной
 void world_setup()
 {
