@@ -1,113 +1,114 @@
-﻿#include <windows.h>
-#include <process.h>
-#include <string>
+﻿#include <string>
+#include <SFML/System.hpp>
 #include "main.h"
 #include "settings.h"
 #include "engine.h"
 #include "world.h"
 #include "pathfinding.h"
 
-struct PathQueryInfo // Структура для межпотокового обмена
-{
-    Field *field;
-    Cell::Coordinates start, finish;
-    Path path;
-} path_query_info = { NULL, {0, 0}, {0, 0} };
+static const int POLL_GRANULARITY = 1000 / 240; // Четверть 60Гц кадра
 
-static uintptr_t upThread;
-static HANDLE hEventPut;
-static CRITICAL_SECTION cs;
+Coworker the_coworker;
+
 static FieldsAStar a_star;
 static Engine engine;
 
-static volatile bool done_flag = false; // Неограждающийся, т.к. изменяется только один раз
-static volatile bool ready_flag = true;
+////////////////////////////////////////////////////////////////////////////////
 
-void ready_flag_set(bool val);
-
-// Функция вспомогательного потока расчета пути
-// Реализованная механика не учитывает возможные изменения на поле во время расчета, 
-// поэтому они должны явно блокироваться на соответствующих участках
-void CalcThread(void* pParams)
+void Coworker::start()
 {
-    //Path path;
+    thread.launch();
+}
+
+void Coworker::stop()
+{
+    flags_set(cwSTART | cwDONE);
+    thread.wait();
+}
+
+// Работу с флагами лучше было бы сделать на атомарных операциях, но испоьлзован более универсальный способ
+
+void Coworker::flags_set(unsigned _flags)
+{
+    mutex.lock();
+    flags |= _flags;
+    mutex.unlock();
+}
+
+void Coworker::flags_clear(unsigned _flags)
+{
+    mutex.lock();
+    flags &= ~_flags;
+    mutex.unlock();
+}
+
+bool Coworker::flags_get(unsigned _flags)
+{
+    bool result;
+    mutex.lock();
+    result = (flags & _flags) == _flags;
+    mutex.unlock();
+    return result;
+}
+
+void Coworker::path_find_request(const Field &_field, int xStart, int yStart, int xFinish, int yFinish)
+{
+    if (flags_get(cwREADY))
+    {
+        field = &_field;
+        start_p.x = xStart; start_p.y = yStart;
+        finish_p.x = xFinish; finish_p.y = yFinish;
+        flags_clear(cwREADY);
+    }
+    flags_set(cwSTART);
+}
+
+const Path& Coworker::path_read()
+{
+    return path;
+}
+
+void Coworker::body()
+{
     while (true)
     {
-        WaitForSingleObject(hEventPut, INFINITE);
-        if (done_flag)
+        start_wait();
+        if (flags_get(cwDONE))
             break;
-        if (!path_ready_check())
+        if (!flags_get(cwREADY))
         {
-            path_query_info.path.clear();
-            a_star.search_ofs(&path_query_info.path, *path_query_info.field, path_query_info.start, path_query_info.finish);
-            ready_flag_set(true);
+            path.clear();
+            a_star.search_ofs(&path, *field, start_p, finish_p);
+            flags_set(cwREADY);
         }
     }
 }
 
+void Coworker::start_wait()
+{
+    for (bool done = false; !done; sf::sleep(sf::microseconds(POLL_GRANULARITY)))
+    {
+        mutex.lock();
+        if (flags & static_cast<unsigned>(cwSTART))
+        {
+            flags &= ~static_cast<unsigned>(cwSTART);
+            done = true;
+        }
+        mutex.unlock();
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 int main()
 {
-    hEventPut = CreateEvent(NULL, FALSE, FALSE, NULL);
-    InitializeCriticalSection(&cs);
-
     rand_gen.seed((unsigned long)(std::time(0)));
-
-    upThread = _beginthread(CalcThread, 0, NULL);
-    if (upThread != -1L)
-    {
-        the_state = gsINPROGRESS;
-        level = 0;
-        world_setup();
-        engine.work_do();
-        // Останавливаем вспомогательный поток
-        done_flag = true;
-        SetEvent(hEventPut);
-        WaitForSingleObject(reinterpret_cast<HANDLE>(upThread), INFINITE);
-        CloseHandle(hEventPut);
-        
-        lists_clear();
-    }
-    DeleteCriticalSection(&cs);
+    the_coworker.start();
+    the_state = gsINPROGRESS;
+    level = 0;
+    world_setup();
+    engine.work_do();
+    the_coworker.stop();
+    lists_clear();
     return 0;
-}
-
-// Запрос на расчёт пути
-void path_find_request(const Field &field, int xStart, int yStart, int xFinish, int yFinish)
-{
-    if (path_ready_check())
-    {
-        path_query_info.field = const_cast<Field*>(&field);
-        path_query_info.start.x = xStart;
-        path_query_info.start.y = yStart;
-        path_query_info.finish.x = xFinish;
-        path_query_info.finish.y = yFinish;
-        ready_flag_set(false);
-    }
-    SetEvent(hEventPut);
-}
-
-// Проверка наличия результата
-bool path_ready_check()
-{
-    bool ready;
-    EnterCriticalSection(&cs);
-    ready = ready_flag;
-    LeaveCriticalSection(&cs);
-    return ready;
-}
-
-// Огороженная установка флага готовности результата
-// true - готов
-// false - идёт расчёт
-static void ready_flag_set(bool val)
-{
-    EnterCriticalSection(&cs);
-    ready_flag = val;
-    LeaveCriticalSection(&cs);
-}
-
-// Получение результата
-const Path& path_read()
-{
-    return path_query_info.path;
 }

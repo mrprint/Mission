@@ -242,7 +242,7 @@ void Engine::update(sf::Time tdelta)
 
     if (controls.count(csLMBUTTON) && the_state == gsINPROGRESS)
     {
-        if (!the_character->path_requested && path_ready_check() && !lb_down)
+        if (!the_character->path_requested && the_coworker.flags_get(Coworker::cwREADY) && !lb_down)
         {
             // Будем идти в указанную позицию
             path_change(mouse_p.x, mouse_p.y);
@@ -254,7 +254,7 @@ void Engine::update(sf::Time tdelta)
     if (controls.count(csRMBUTTON) && the_state == gsINPROGRESS)
     {
 
-        if (!the_character->path_requested && path_ready_check() && !rb_down)
+        if (!the_character->path_requested && the_coworker.flags_get(Coworker::cwREADY) && !rb_down)
         {
             // Пытаемся изменить состояние ячейки "свободна"/"препятствие"
             if (cell_flip(mouse_p.x, mouse_p.y))
@@ -268,7 +268,7 @@ void Engine::update(sf::Time tdelta)
     }
     else
         rb_down = false;
-    if (the_character->path_requested && path_ready_check())
+    if (the_character->path_requested && the_coworker.flags_get(Coworker::cwREADY))
     {
         the_character->path_requested = false;
         the_character->way_new_process();

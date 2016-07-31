@@ -205,7 +205,7 @@ void Character::way_new_request(int tx, int ty)
     Field::pos_to_cell(&x, &y, position);
     way.target.x = tx;
     way.target.y = ty;
-    path_find_request(the_field, x, y, tx, ty);
+    the_coworker.path_find_request(the_field, x, y, tx, ty);
     path_requested = true;
 }
 
@@ -214,7 +214,7 @@ void Character::way_new_process()
 {
     Cell::Coordinates delta;
     int x, y;
-    way.path = path_read();
+    way.path = the_coworker.path_read();
     Field::pos_to_cell(&x, &y, position);
     if (way.path.size() > 0)
     {
