@@ -41,7 +41,7 @@ protected:
         inline bool operator> (const AttrsPtr& r) const { return r.pa->fscore < pa->fscore; }
     };
 
-    std::priority_queue<AttrsPtr, std::vector<AttrsPtr>, std::greater<AttrsPtr>> opened;
+    std::priority_queue<AttrsPtr, std::vector<AttrsPtr>, std::greater<AttrsPtr> > opened;
     std::vector<AttrsPtr> temp_buff; // Для переупорядочивания
 
 public:
@@ -131,7 +131,7 @@ protected:
     void rearrange(Attributes *attr, TWeight score)
     {
         AttrsPtr a;
-        while (a = opened.top(), opened.pop(), a.pa != attr) temp_buff.push_back(a);
+        while ((a = opened.top()), opened.pop(), (a.pa != attr)) temp_buff.push_back(a);
         a.pa->fscore = score;
         opened.push(a);
         while (!temp_buff.empty())

@@ -1,6 +1,6 @@
 ﻿#include <limits>
 #include <stdio.h>
-#include <math.h>  
+#include <math.h>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include "engine.h"
@@ -67,21 +67,21 @@ Engine::Engine()
     window = NULL;
     videoSize = sf::Vector2i(SCREEN_W, SCREEN_H);
     banner_timeout = 0.0f;
-    sprites = {
-        SpriteInfo("skybkg.png"),
-        SpriteInfo("tile.png" , SPR_SIZE / 2, TILE_HOT),
-        SpriteInfo("lwall.png" , SPR_SIZE / 2, TILE_HOT),
-        SpriteInfo("rwall.png" , SPR_SIZE / 2, TILE_HOT),
-        SpriteInfo("lbatt.png" , SPR_SIZE / 2, TILE_HOT),
-        SpriteInfo("rbatt.png" , SPR_SIZE / 2, TILE_HOT),
-        SpriteInfo("fireball.png" , SPR_SIZE / 2, SPR_SIZE),
-        SpriteInfo("exit.png" , SPR_SIZE / 2, TILE_HOT),
-        SpriteInfo("lguard.png" , SPR_SIZE / 2, TILE_HOT),
-        SpriteInfo("rguard.png" , SPR_SIZE / 2, TILE_HOT),
-        SpriteInfo("character.png" , SPR_SIZE / 2, TILE_HOT),
-        SpriteInfo("character_t.png" , SPR_SIZE / 2, TILE_HOT)
-    };
-    sounds = { "shot.wav", "hit.wav", "gong.wav" };
+    sprites.push_back(SpriteInfo("skybkg.png"));
+    sprites.push_back(SpriteInfo("tile.png" , SPR_SIZE / 2, TILE_HOT));
+    sprites.push_back(SpriteInfo("lwall.png" , SPR_SIZE / 2, TILE_HOT));
+    sprites.push_back(SpriteInfo("rwall.png" , SPR_SIZE / 2, TILE_HOT));
+    sprites.push_back(SpriteInfo("lbatt.png" , SPR_SIZE / 2, TILE_HOT));
+    sprites.push_back(SpriteInfo("rbatt.png" , SPR_SIZE / 2, TILE_HOT));
+    sprites.push_back(SpriteInfo("fireball.png" , SPR_SIZE / 2, SPR_SIZE));
+    sprites.push_back(SpriteInfo("exit.png" , SPR_SIZE / 2, TILE_HOT));
+    sprites.push_back(SpriteInfo("lguard.png" , SPR_SIZE / 2, TILE_HOT));
+    sprites.push_back(SpriteInfo("rguard.png" , SPR_SIZE / 2, TILE_HOT));
+    sprites.push_back(SpriteInfo("character.png" , SPR_SIZE / 2, TILE_HOT));
+    sprites.push_back(SpriteInfo("character_t.png" , SPR_SIZE / 2, TILE_HOT));
+    sounds.push_back("shot.wav");
+    sounds.push_back("hit.wav");
+    sounds.push_back("gong.wav");
 }
 
 Engine::~Engine()

@@ -1,4 +1,5 @@
 ﻿#include <string>
+#include <time.h>
 #include <SFML/System.hpp>
 #include "main.h"
 #include "settings.h"
@@ -102,7 +103,7 @@ void Coworker::start_wait()
 
 int main()
 {
-    rand_gen.seed((unsigned long)(std::time(0)));
+    srand(static_cast<unsigned>(time(NULL)));
     the_coworker.start();
     the_state = gsINPROGRESS;
     level = 0;

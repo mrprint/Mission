@@ -1,7 +1,8 @@
 ﻿#include <math.h>
-#include <random>
 #include <vector>
 #include <algorithm>
+#include <limits>
+#include <cstdlib>
 #include "settings.h"
 #include "world.h"
 #include "pathfinding.h"
@@ -15,18 +16,28 @@ Artillery the_artillery;
 Character *the_character;
 SoundsQueue the_sounds;
 
-std::default_random_engine rand_gen;
-std::uniform_real_distribution<float> rand_distrib(0.0f, 1.0f);
-
 // Мелкие вспомогательные функции
+static inline int rand_even(int max=RAND_MAX)
+{
+    return rand() % max;
+}
+
+static inline float randomf()
+{
+    return static_cast<float>(rand_even()) / static_cast <float>(RAND_MAX);
+}
+
 static inline bool rnd_choice(float possib)
 {
-    return rand_distrib(rand_gen) < possib;
+    return randomf() < possib;
 }
+
+template<class RandomIt>
+static void shuffle(RandomIt, RandomIt);
 
 static inline float deviation_apply(float val, float dev)
 {
-    return (2 * dev * rand_distrib(rand_gen) - dev + 1) * val;
+    return (2 * dev * randomf() - dev + 1) * val;
 }
 
 template<class T>
@@ -178,21 +189,21 @@ void Character::set_speed()
     }
     dx = way.neigpos.x - position.x;
     dy = way.neigpos.y - position.y;
-    adx = abs(dx);
-    ady = abs(dy);
+    adx = fabs(dx);
+    ady = fabs(dy);
     if ((adx < std::numeric_limits<float>::epsilon() && ady < std::numeric_limits<float>::epsilon()) || way.path.size() == 0)
         return;
     if (adx > ady)
     {
         a = atan(ady / adx);
-        speed.x = float(_copysign(CHAR_B_SPEED * cos(a), dx));
-        speed.y = float(_copysign(CHAR_B_SPEED * sin(a), dy));
+        speed.x = copysignf(CHAR_B_SPEED * cos(a), dx);
+        speed.y = copysignf(CHAR_B_SPEED * sin(a), dy);
     }
     else
     {
         a = atan(adx / ady);
-        speed.x = float(_copysign(CHAR_B_SPEED * sin(a), dx));
-        speed.y = float(_copysign(CHAR_B_SPEED * cos(a), dy));
+        speed.x = copysignf(CHAR_B_SPEED * sin(a), dx);
+        speed.y = copysignf(CHAR_B_SPEED * cos(a), dy);
     }
 }
 
@@ -234,9 +245,9 @@ void Guard::move(float tdelta)
     Unit::move(tdelta);
     Field::pos_to_cell(&x, &y, position);
     if (the_field.cells[y][x].attribs.count(Cell::atrGUARDBACKW) > 0)
-        speed.x = -abs(speed.x);
+        speed.x = -fabs(speed.x);
     if (the_field.cells[y][x].attribs.count(Cell::atrGUARDFORW) > 0)
-        speed.x = abs(speed.x);
+        speed.x = fabs(speed.x);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -286,7 +297,7 @@ void world_setup()
         apositions[WORLD_DIM - 1 + i].delay = deviation_apply(ART_B_DELAY, ART_DEV);
         apositions[WORLD_DIM - 1 + i].timeout = 0.0f;
     }
-    std::shuffle(apositions.begin(), apositions.end(), rand_gen);
+    shuffle(apositions.begin(), apositions.end());
     int acount = std::min(complexity_apply(ART_COUNT, LEVEL_COMPL), int(apositions.capacity()));
     for (i = 0; i < acount; i++)
         the_artillery.setting.push_back(apositions[i]);
@@ -359,4 +370,16 @@ void lists_clear()
     the_alives.clear();
     the_artillery.setting.clear();
     the_sounds.clear();
+}
+
+template<class RandomIt>
+static void shuffle(RandomIt first, RandomIt last)
+{
+    typedef typename std::iterator_traits<RandomIt>::difference_type diff_t;
+
+    diff_t n = last - first;
+    for (diff_t i = n - 1; i > 0; --i) {
+        using std::swap;
+        swap(first[i], first[static_cast<diff_t>(rand_even(static_cast<int>(i)))]);
+    }
 }

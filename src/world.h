@@ -1,6 +1,5 @@
 ﻿#pragma once
 
-#include <random>
 #include <deque>
 #include <set>
 #include <vector>
@@ -182,5 +181,3 @@ extern UnitsList the_alives; // Активные объекты
 extern Artillery the_artillery; // Все пушки
 extern Character *the_character; // Указатель на юнит главного героя, содержащийся в общем списке
 extern SoundsQueue the_sounds; // Очередь звуков
-
-extern std::default_random_engine rand_gen;
