@@ -179,6 +179,6 @@ protected:
 
     static inline bool inbound(int x, int y)
     {
-        return x >= 0 && x < W && y >= 0 && y < H;
+        return x >= 0 && x < static_cast<int>(W) && y >= 0 && y < static_cast<int>(H);
     }
 };

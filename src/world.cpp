@@ -17,14 +17,14 @@ Character *the_character;
 SoundsQueue the_sounds;
 
 // Мелкие вспомогательные функции
-static inline int rand_even(int max=RAND_MAX)
+static inline int randint(int max=RAND_MAX)
 {
     return rand() % max;
 }
 
 static inline float randomf()
 {
-    return static_cast<float>(rand_even()) / static_cast <float>(RAND_MAX);
+    return static_cast<float>(randint()) / static_cast <float>(RAND_MAX);
 }
 
 static inline bool rnd_choice(float possib)
@@ -380,6 +380,6 @@ static void shuffle(RandomIt first, RandomIt last)
     diff_t n = last - first;
     for (diff_t i = n - 1; i > 0; --i) {
         using std::swap;
-        swap(first[i], first[static_cast<diff_t>(rand_even(static_cast<int>(i)))]);
+        swap(first[i], first[static_cast<diff_t>(randint(static_cast<int>(i)))]);
     }
 }
