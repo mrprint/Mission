@@ -131,14 +131,14 @@ void Engine::frame_render()
     field_draw();
     // Отображаем игровую информацию
     snprintf(buffer, sizeof(buffer), "Level %d", level + 1);
-    text_print(float(LC_OFST), float(LC_OFST), TEXT_COLOR, reinterpret_cast<char*>(&buffer));
+    text_print(static_cast<float>(LC_OFST), static_cast<float>(LC_OFST), TEXT_COLOR, reinterpret_cast<char*>(&buffer));
     switch (the_state)
     {
     case gsLOSS:
-        text_print(float(SCREEN_W / 2), float(SCREEN_H / 2), TEXT_COLOR, "YOU LOSS!", true); // Запомнилось из какой-то древней игрушки
+        text_print(static_cast<float>(SCREEN_W / 2), static_cast<float>(SCREEN_H / 2), TEXT_COLOR, "YOU LOSS!", true); // Запомнилось из какой-то древней игрушки
         break;
     case gsWIN:
-        text_print(float(SCREEN_W / 2), float(SCREEN_H / 2), TEXT_COLOR, "LEVEL UP!", true);
+        text_print(static_cast<float>(SCREEN_W / 2), static_cast<float>(SCREEN_H / 2), TEXT_COLOR, "LEVEL UP!", true);
         break;
     }
     window->display();

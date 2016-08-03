@@ -48,7 +48,7 @@ static inline T round(T number)
 
 static inline int complexity_apply(int val, float kc)
 {
-    return val + int(round(val * level * kc));
+    return val + static_cast<int>(round(val * level * kc));
 }
 
 static inline float complexity_apply(float val, float kc)
@@ -90,8 +90,8 @@ void Field::cell_to_pos(SpacePosition *position, int x, int y)
 void Field::pos_to_cell(int *x, int *y, const SpacePosition &position)
 {
     float k = WORLD_DIM  / 2.0f;
-    *x = int(floor((position.x + 1.0f) * k));
-    *y = int(floor((position.y + 1.0f) * k));
+    *x = static_cast<int>(floor((position.x + 1.0f) * k));
+    *y = static_cast<int>(floor((position.y + 1.0f) * k));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -298,7 +298,7 @@ void world_setup()
         apositions[WORLD_DIM - 1 + i].timeout = 0.0f;
     }
     shuffle(apositions.begin(), apositions.end());
-    int acount = std::min(complexity_apply(ART_COUNT, LEVEL_COMPL), int(apositions.capacity()));
+    int acount = std::min(complexity_apply(ART_COUNT, LEVEL_COMPL), static_cast<int>(apositions.capacity()));
     for (i = 0; i < acount; i++)
         the_artillery.setting.push_back(apositions[i]);
 }

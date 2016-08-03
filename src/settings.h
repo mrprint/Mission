@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #ifdef _DEBUG
-#include <vld.h>
+//#include <vld.h>
 #endif
 
 // Отрисовка полностью адаптируется под настройки разрешения, размера поля и отступов от границы экрана
@@ -38,5 +38,5 @@ static const float BANNER_TOUT = 3.0f;
 
 static inline float to_space_dim(int v)
 {
-    return float(v + 1) / WORLD_DIM * 2.0f - CELL_HW - 1.0f;
+    return static_cast<float>(v + 1) / WORLD_DIM * 2.0f - CELL_HW - 1.0f;
 }
