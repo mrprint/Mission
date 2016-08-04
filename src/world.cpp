@@ -8,6 +8,10 @@
 #include "pathfinding.h"
 #include "main.h"
 
+#if _MSC_VER && (_MSC_VER < 1800) && !__INTEL_COMPILER
+#define copysignf _copysign
+#endif
+
 unsigned level;
 GameState the_state;
 Field the_field;
@@ -17,7 +21,7 @@ Character *the_character;
 SoundsQueue the_sounds;
 
 // Мелкие вспомогательные функции
-static inline int randint(int max=RAND_MAX)
+static inline int randint(int max = RAND_MAX)
 {
     return rand() % max;
 }
@@ -89,7 +93,7 @@ void Field::cell_to_pos(SpacePosition *position, int x, int y)
 
 void Field::pos_to_cell(int *x, int *y, const SpacePosition &position)
 {
-    float k = WORLD_DIM  / 2.0f;
+    float k = WORLD_DIM / 2.0f;
     *x = static_cast<int>(floor((position.x + 1.0f) * k));
     *y = static_cast<int>(floor((position.y + 1.0f) * k));
 }

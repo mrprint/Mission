@@ -15,7 +15,7 @@ static const float SPR_SCALE = TILE_W / SPR_SIZE;
 static const float SK45 = 0.7071067812f;
 static const float HYP2 = 2.828427125f;
 static const unsigned TEXT_COLOR = 0xFF0010FF;
-static const char *RES_DIR = "resources\\";
+static const char *RES_DIR = "resources/";
 
 enum SpriteIndexes {
     bgspr = 0, tlspr, lwspr, rwspr, lbspr, rbspr, fbspr, epspr, lgspr, rgspr, chspr, chtspr, _endspr
