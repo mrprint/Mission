@@ -8,6 +8,10 @@
 #include "world.h"
 #include "main.h"
 
+#if _MSC_VER && (_MSC_VER < 1800) && !__INTEL_COMPILER
+#define snprintf(buff, sz, str, ...) sprintf(buff, str, __VA_ARGS__)
+#endif
+
 static const float BKG_SIZE = 1024.0f;
 static const float SPR_SIZE = 128.0f;
 static const float TILE_HOT = SPR_SIZE * 0.75f;
