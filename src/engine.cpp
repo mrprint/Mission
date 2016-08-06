@@ -21,11 +21,15 @@ static const float HYP2 = 2.828427125f;
 static const unsigned TEXT_COLOR = 0xFF0010FF;
 static const char *RES_DIR = "resources/";
 
+enum TextureIndexes {
+    txtBKG = 0, txtSPR, _txtEND
+};
 enum SpriteIndexes {
-    bgspr = 0, tlspr, lwspr, rwspr, lbspr, rbspr, fbspr, epspr, lgspr, rgspr, chspr, chtspr, _endspr
+    sprBKG = 0, sprTILE, sprLWALL, sprRWALL, sprLBATT, sprRBATT, sprFBALL,
+    sprEXIT, sprLGUARD, sprRGUARD, sprCHAR, sprCHART, _sprEND
 };
 enum SoundIndexes {
-    shothe = 0, hithe, luphe, _endhe
+    sndSHOT = 0, sndHIT, sndLUP, _sndEND
 };
 
 // Юнит с рассчитанным расположением на экране
@@ -52,9 +56,9 @@ static inline void space_to_screen(float *x, float *y, const SpacePosition &posi
 // Трансформация экранных координат в пространственные
 static inline void screen_to_space(SpacePosition *position, float x, float y)
 {
-    float k = 2.0f * ROOM_H * ROOM_W * SK45;
-    position->x = -(-x * HYP2 * ROOM_H + HYP2 * LC_OFST * ROOM_H + HYP2 * ROOM_W * (TC_OFST + ROOM_H - y)) / k;
-    position->y = -(x * HYP2 * ROOM_H - HYP2 * LC_OFST * ROOM_H + HYP2 * ROOM_W * (TC_OFST - y)) / k;
+    const float K = 2.0f * ROOM_H * ROOM_W * SK45 / HYP2;
+    position->x = -(-x * ROOM_H + LC_OFST * ROOM_H + ROOM_W * (TC_OFST + ROOM_H - y)) / K;
+    position->y = -(x * ROOM_H - LC_OFST * ROOM_H + ROOM_W * (TC_OFST - y)) / K;
 }
 
 // Выбор ячейки по экранным координатам
@@ -71,18 +75,20 @@ Engine::Engine()
     window = NULL;
     videoSize = sf::Vector2i(SCREEN_W, SCREEN_H);
     banner_timeout = 0.0f;
-    sprites.push_back(SpriteInfo("skybkg.png"));
-    sprites.push_back(SpriteInfo("tile.png" , SPR_SIZE / 2, TILE_HOT));
-    sprites.push_back(SpriteInfo("lwall.png" , SPR_SIZE / 2, TILE_HOT));
-    sprites.push_back(SpriteInfo("rwall.png" , SPR_SIZE / 2, TILE_HOT));
-    sprites.push_back(SpriteInfo("lbatt.png" , SPR_SIZE / 2, TILE_HOT));
-    sprites.push_back(SpriteInfo("rbatt.png" , SPR_SIZE / 2, TILE_HOT));
-    sprites.push_back(SpriteInfo("fireball.png" , SPR_SIZE / 2, SPR_SIZE));
-    sprites.push_back(SpriteInfo("exit.png" , SPR_SIZE / 2, TILE_HOT));
-    sprites.push_back(SpriteInfo("lguard.png" , SPR_SIZE / 2, TILE_HOT));
-    sprites.push_back(SpriteInfo("rguard.png" , SPR_SIZE / 2, TILE_HOT));
-    sprites.push_back(SpriteInfo("character.png" , SPR_SIZE / 2, TILE_HOT));
-    sprites.push_back(SpriteInfo("character_t.png" , SPR_SIZE / 2, TILE_HOT));
+    textures.push_back(TextureInfo("skybkg.png"));
+    textures.push_back(TextureInfo("sprites.png"));
+    sprites.push_back(SpriteInfo(textures[txtBKG], 0, 0, 1024, 1024, 0, 0, 0.0f, 0.0f));
+    sprites.push_back(SpriteInfo(textures[txtSPR], 130, 0, 128, 64, 0, 64, SPR_SIZE / 2, TILE_HOT));
+    sprites.push_back(SpriteInfo(textures[txtSPR], 380, 77, 63, 96, 0, 0, SPR_SIZE / 2, TILE_HOT));
+    sprites.push_back(SpriteInfo(textures[txtSPR], 445, 77, 65, 97, 63, 0, SPR_SIZE / 2, TILE_HOT));
+    sprites.push_back(SpriteInfo(textures[txtSPR], 232, 66, 24, 47, 20, 25, SPR_SIZE / 2, TILE_HOT));
+    sprites.push_back(SpriteInfo(textures[txtSPR], 468, 0, 23, 50, 82, 22, SPR_SIZE / 2, TILE_HOT));
+    sprites.push_back(SpriteInfo(textures[txtSPR], 0, 0, 128, 128, 0, 0, SPR_SIZE / 2, SPR_SIZE));
+    sprites.push_back(SpriteInfo(textures[txtSPR], 0, 130, 66, 35, 29, 77, SPR_SIZE / 2, TILE_HOT));
+    sprites.push_back(SpriteInfo(textures[txtSPR], 130, 66, 100, 72, 11, 47, SPR_SIZE / 2, TILE_HOT));
+    sprites.push_back(SpriteInfo(textures[txtSPR], 364, 0, 102, 75, 18, 44, SPR_SIZE / 2, TILE_HOT));
+    sprites.push_back(SpriteInfo(textures[txtSPR], 290, 109, 88, 91, 19, 16, SPR_SIZE / 2, TILE_HOT));
+    sprites.push_back(SpriteInfo(textures[txtSPR], 260, 0, 102, 107, 5, 0, SPR_SIZE / 2, TILE_HOT));
     sounds.push_back("shot.wav");
     sounds.push_back("hit.wav");
     sounds.push_back("gong.wav");
@@ -104,16 +110,21 @@ bool Engine::init()
     if (!window)
         return false;
 
-    for (int i = bgspr; i < _endspr; ++i)
+    for (int i = txtBKG; i < _txtEND; ++i)
+    {
+        if (!textures[i].init())
+            return false;
+    }
+    for (int i = sprBKG; i < _sprEND; ++i)
     {
         if (!sprites[i].init())
             return false;
     }
-    sf::Sprite *background = &sprites[bgspr].sprite;
+    sf::Sprite *background = &sprites[sprBKG].sprite;
     background->setPosition(0.0f, 0.0f);
     sf::FloatRect brect = background->getLocalBounds();
     background->setScale(SCREEN_W / brect.width, SCREEN_H / brect.height);
-    for (int i = shothe; i < _endhe; ++i)
+    for (int i = sndSHOT; i < _sndEND; ++i)
     {
         if (!sounds[i].init())
             return false;
@@ -131,7 +142,7 @@ void Engine::frame_render()
 
     if (!window->isOpen())
         return;
-    window->draw(sprites[bgspr].sprite);
+    window->draw(sprites[sprBKG].sprite);
     field_draw();
     // Отображаем игровую информацию
     snprintf(buffer, sizeof(buffer), "Level %d", level + 1);
@@ -327,22 +338,22 @@ void Engine::field_draw()
         for (int x = 0; x < WORLD_DIM; x++)
         {
             if (the_field.cells[y][x].attribs.count(Cell::atrOBSTACLE) == 0)
-                tile_draw(&sprites[tlspr].sprite, x, y, SPR_SCALE);
+                tile_draw(&sprites[sprTILE].sprite, x, y, SPR_SCALE);
             if (the_field.cells[y][x].attribs.count(Cell::atrEXIT) > 0)
-                tile_draw(&sprites[epspr].sprite, x, y, SPR_SCALE);
+                tile_draw(&sprites[sprEXIT].sprite, x, y, SPR_SCALE);
         };
     // Рисуем стены
     for (int i = 0; i < WORLD_DIM; i++)
-        tile_draw(&sprites[rwspr].sprite, i, 0, SPR_SCALE);
+        tile_draw(&sprites[sprRWALL].sprite, i, 0, SPR_SCALE);
     for (int i = 0; i < WORLD_DIM; i++)
-        tile_draw(&sprites[lwspr].sprite, 0, i, SPR_SCALE);
+        tile_draw(&sprites[sprLWALL].sprite, 0, i, SPR_SCALE);
     // Рисуем пушки
     for (Artillery::Settings::iterator it = the_artillery.setting.begin(); it != the_artillery.setting.end(); ++it)
     {
         if (fabs(it->speed.x) < std::numeric_limits<float>::epsilon())
-            tile_draw(&sprites[rbspr].sprite, it->position.x, it->position.y, SPR_SCALE);
+            tile_draw(&sprites[sprRBATT].sprite, it->position.x, it->position.y, SPR_SCALE);
         else
-            tile_draw(&sprites[lbspr].sprite, it->position.x, it->position.y, SPR_SCALE);
+            tile_draw(&sprites[sprLBATT].sprite, it->position.x, it->position.y, SPR_SCALE);
     }
     // Заполняем список юнитов с их экранными координатами
     ScreenPositions positions;
@@ -360,15 +371,15 @@ void Engine::field_draw()
         switch (it->unit->id()) {
         case Unit::utCharacter:
             if (the_character->path_requested)
-                sprite_draw(&sprites[chtspr].sprite, it->x, it->y, SPR_SCALE);
+                sprite_draw(&sprites[sprCHART].sprite, it->x, it->y, SPR_SCALE);
             else
-                sprite_draw(&sprites[chspr].sprite, it->x, it->y, SPR_SCALE);
+                sprite_draw(&sprites[sprCHAR].sprite, it->x, it->y, SPR_SCALE);
             break;
         case Unit::utFireball:
-            sprite_draw(&sprites[fbspr].sprite, it->x, it->y, SPR_SCALE * 0.5f);
+            sprite_draw(&sprites[sprFBALL].sprite, it->x, it->y, SPR_SCALE * 0.5f);
             break;
         case Unit::utGuard:
-            sprite_draw(&sprites[it->unit->speed.x >= 0.0f ? rgspr : lgspr].sprite, it->x, it->y, SPR_SCALE);
+            sprite_draw(&sprites[it->unit->speed.x >= 0.0f ? sprRGUARD : sprLGUARD].sprite, it->x, it->y, SPR_SCALE);
         }
     }
 }
@@ -406,14 +417,14 @@ void Engine::sounds_play()
         switch (the_sounds.front())
         {
         case seSHOT:
-            played_sounds.play(sounds[shothe].buffer);
+            played_sounds.play(sounds[sndSHOT].buffer);
             break;
         case seHIT:
-            played_sounds.play(sounds[hithe].buffer);
+            played_sounds.play(sounds[sndHIT].buffer);
             break;
 
         case seLVLUP:
-            played_sounds.play(sounds[luphe].buffer);
+            played_sounds.play(sounds[sndLUP].buffer);
             break;
         }
         the_sounds.pop_front();
@@ -456,13 +467,20 @@ void Orchestre::update()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-bool SpriteInfo::init()
+bool TextureInfo::init()
 {
     if (!texture.loadFromFile(std::string(RES_DIR) + source))
         return false;
     texture.setSmooth(true);
-    sprite.setTexture(texture);
-    sprite.setOrigin(spot);
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+bool SpriteInfo::init()
+{
+    sprite.setTexture(texture->texture);
+    sprite.setTextureRect(txrect);
+    sprite.setOrigin(spot.x - offset.x, spot.y - offset.y);
     return true;
 }
 

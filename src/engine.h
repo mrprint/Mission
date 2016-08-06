@@ -1,19 +1,32 @@
 ﻿#pragma once
 
-#include <SFML/Graphics.hpp>
-#include <SFML/Audio.hpp>
 #include <vector>
 #include <deque>
 #include <set>
+#include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
+
+// Вся информация о текстуре и её инициализации
+struct TextureInfo {
+    const char *source;
+    sf::Texture texture;
+    TextureInfo(const char *_source) : source(_source) {}
+    bool init();
+};
 
 // Вся информация о спрайте и его инициализации
 struct SpriteInfo {
-    const char *source;
+    const TextureInfo *texture;
+    sf::IntRect txrect;
+    sf::Vector2u offset;
     sf::Vector2f spot;
-    sf::Texture texture;
     sf::Sprite sprite;
-    SpriteInfo(const char *_source, float spot_x = 0.0f, float spot_y = 0.0f)
-        : source(_source), spot(spot_x, spot_y) {}
+    SpriteInfo(
+        const TextureInfo &_texture,
+        int txx, int txy, int txw, int txh,
+        unsigned ofsx, unsigned ofsy,
+        float spx, float spy
+    ) : texture(&_texture), txrect(txx, txy, txw, txh), offset(ofsx, ofsy), spot(spx, spy) {}
     bool init();
 };
 
@@ -41,10 +54,11 @@ class Engine
         csLMBUTTON,
         csRMBUTTON
     };
-    
+
     sf::RenderWindow* window;
     sf::Vector2i videoSize;
     sf::Font font;
+    std::vector<TextureInfo> textures;
     std::vector<SpriteInfo> sprites;
     std::vector<SoundInfo> sounds;
     std::set<ControlState> controls;
@@ -67,6 +81,6 @@ private:
     void path_change(int, int);
     bool cell_flip(int, int);
     void sounds_play();
-    void text_print(float, float, unsigned, const char*, bool=false);
+    void text_print(float, float, unsigned, const char*, bool = false);
 };
 
