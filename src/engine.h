@@ -5,6 +5,7 @@
 #include <set>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
+#include "world.h"
 
 // Вся информация о текстуре и её инициализации
 struct TextureInfo {
@@ -48,6 +49,18 @@ public:
     void update();
 };
 
+struct DrawingSizes
+{
+    float spr_scale;
+    float bkg_scale;
+    int screen_w;
+    int screen_h;
+    int room_w;
+    int room_h;
+    int lc_ofst; // Реальный отступ левого угла комнаты от края экрана
+    int tc_ofst; // Отступ верхнего угла комнаты от края экрана
+};
+
 class Engine
 {
     enum ControlState {
@@ -56,7 +69,8 @@ class Engine
     };
 
     sf::RenderWindow* window;
-    sf::Vector2i videoSize;
+    DrawingSizes sizes;
+    
     sf::Font font;
     std::vector<TextureInfo> textures;
     std::vector<SpriteInfo> sprites;
@@ -65,12 +79,14 @@ class Engine
     sf::Vector2i mouse_p;
     Orchestre played_sounds;
     float banner_timeout;
+    bool windowed;
 public:
     Engine();
     ~Engine();
     void work_do();
 private:
     bool init();
+    void videomode_set(bool);
     void main_loop();
     void frame_render();
     void input_process();
@@ -82,5 +98,8 @@ private:
     bool cell_flip(int, int);
     void sounds_play();
     void text_print(float, float, unsigned, const char*, bool = false);
+    void space_to_screen(float*, float*, const SpacePosition&);
+    void screen_to_space(SpacePosition*, float, float);
+    void screen_to_field(int*, int*, float, float);
 };
 

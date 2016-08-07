@@ -13,14 +13,6 @@ static const int SCREEN_H = 768;
 static const int WORLD_DIM = 30; // Размерность поля
 static const int _LC_OFST = 8; // Желаемый отступ левого угла комнаты от края экрана
 
-static const int TILE_W = (SCREEN_W - (_LC_OFST * 2)) / WORLD_DIM - ((SCREEN_W - (_LC_OFST * 2)) / WORLD_DIM) % 2;
-static const int TILE_H = TILE_W / 2;
-static const int TILE_HW = TILE_W / 2;
-static const int TILE_HH = TILE_H / 2 + (TILE_H / 2) % 2;
-static const int ROOM_W = TILE_W * WORLD_DIM;
-static const int ROOM_H = TILE_H * WORLD_DIM;
-static const int LC_OFST = (SCREEN_W - ROOM_W) / 2; // Реальный отступ левого угла комнаты от края экрана
-static const int TC_OFST = (SCREEN_H - ROOM_H) / 2; // Отступ верхнего угла комнаты от края экрана
 static const float CELL_W = 2.0f / WORLD_DIM;
 static const float CELL_HW = CELL_W / 2.0f;
 static const float U_SIZE = CELL_HW * 0.66f;
