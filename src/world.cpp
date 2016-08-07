@@ -36,8 +36,8 @@ static inline bool rnd_choice(float possib)
     return randomf() < possib;
 }
 
-template<class RandomIt>
-static void shuffle(RandomIt, RandomIt);
+template<class T>
+static void shuffle(T, T);
 
 static inline float deviation_apply(float val, float dev)
 {
@@ -376,10 +376,10 @@ void lists_clear()
     the_sounds.clear();
 }
 
-template<class RandomIt>
-static void shuffle(RandomIt first, RandomIt last)
+template<class T>
+static void shuffle(T first, T last)
 {
-    typedef typename std::iterator_traits<RandomIt>::difference_type diff_t;
+    typedef typename std::iterator_traits<T>::difference_type diff_t;
 
     diff_t n = last - first;
     for (diff_t i = n - 1; i > 0; --i) {

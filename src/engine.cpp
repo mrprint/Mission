@@ -15,7 +15,6 @@
 static const float BKG_SIZE = 1024.0f;
 static const float SPR_SIZE = 128.0f;
 static const float TILE_HOT = SPR_SIZE * 0.75f;
-static const float SPR_SCALE = TILE_W / SPR_SIZE;
 static const float SK45 = 0.7071067812f;
 static const float HYP2 = 2.828427125f;
 static const unsigned TEXT_COLOR = 0xFF0010FF;
@@ -42,42 +41,13 @@ struct ScreenPos {
 typedef std::vector<ScreenPos> ScreenPositions; // Список расположения юнитов
 
 ////////////////////////////////////////////////////////////////////////////////
-// Трансформация пространственных координат в экранные
-static inline void space_to_screen(float *x, float *y, const SpacePosition &position)
-{
-    float xsk = position.x * SK45;
-    float ysk = position.y * SK45;
-    float tx = xsk - ysk;
-    float ty = xsk + ysk;
-    *x = LC_OFST + (HYP2 / 2.0f + tx) * ROOM_W / HYP2;
-    *y = TC_OFST + (HYP2 / 2.0f + ty) * ROOM_H / HYP2;
-}
-
-// Трансформация экранных координат в пространственные
-static inline void screen_to_space(SpacePosition *position, float x, float y)
-{
-    const float K = 2.0f * ROOM_H * ROOM_W * SK45 / HYP2;
-    position->x = -(-x * ROOM_H + LC_OFST * ROOM_H + ROOM_W * (TC_OFST + ROOM_H - y)) / K;
-    position->y = -(x * ROOM_H - LC_OFST * ROOM_H + ROOM_W * (TC_OFST - y)) / K;
-}
-
-// Выбор ячейки по экранным координатам
-static inline void screen_to_field(int *fx, int *fy, float sx, float sy)
-{
-    SpacePosition position;
-    screen_to_space(&position, sx, sy);
-    Field::pos_to_cell(fx, fy, position);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 Engine::Engine()
 {
-    window = NULL;
-    videoSize = sf::Vector2i(SCREEN_W, SCREEN_H);
+    window = new sf::RenderWindow();
     banner_timeout = 0.0f;
     textures.push_back(TextureInfo("skybkg.png"));
     textures.push_back(TextureInfo("sprites.png"));
-    sprites.push_back(SpriteInfo(textures[txtBKG], 0, 0, 1024, 1024, 0, 0, 0.0f, 0.0f));
+    sprites.push_back(SpriteInfo(textures[txtBKG], 0, 0, 1024, 1024, 0, 0, BKG_SIZE / 2, BKG_SIZE / 2));
     sprites.push_back(SpriteInfo(textures[txtSPR], 130, 0, 128, 64, 0, 64, SPR_SIZE / 2, TILE_HOT));
     sprites.push_back(SpriteInfo(textures[txtSPR], 380, 77, 63, 96, 0, 0, SPR_SIZE / 2, TILE_HOT));
     sprites.push_back(SpriteInfo(textures[txtSPR], 445, 77, 65, 97, 63, 0, SPR_SIZE / 2, TILE_HOT));
@@ -92,6 +62,7 @@ Engine::Engine()
     sounds.push_back("shot.wav");
     sounds.push_back("hit.wav");
     sounds.push_back("gong.wav");
+    windowed = true;
 }
 
 Engine::~Engine()
@@ -102,12 +73,8 @@ Engine::~Engine()
 
 bool Engine::init()
 {
-    window = new sf::RenderWindow(
-        sf::VideoMode(videoSize.x, videoSize.y),
-        "The Mission",
-        sf::Style::Titlebar | sf::Style::Close
-    );
-    if (!window)
+    videomode_set(windowed);
+    if (!(window && window->isOpen()))
         return false;
 
     for (int i = txtBKG; i < _txtEND; ++i)
@@ -120,10 +87,6 @@ bool Engine::init()
         if (!sprites[i].init())
             return false;
     }
-    sf::Sprite *background = &sprites[sprBKG].sprite;
-    background->setPosition(0.0f, 0.0f);
-    sf::FloatRect brect = background->getLocalBounds();
-    background->setScale(SCREEN_W / brect.width, SCREEN_H / brect.height);
     for (int i = sndSHOT; i < _sndEND; ++i)
     {
         if (!sounds[i].init())
@@ -132,8 +95,44 @@ bool Engine::init()
     if (!font.loadFromFile(std::string(RES_DIR) + "Orbitron Medium.ttf"))
         return false;
 
-    window->setVerticalSyncEnabled(true);
     return true;
+}
+
+void Engine::videomode_set(bool _windowed)
+{
+    sf::VideoMode mode;
+    unsigned style;
+    if (_windowed)
+    {
+        mode = sf::VideoMode(SCREEN_W, SCREEN_H);
+        style = sf::Style::Titlebar | sf::Style::Close;
+        window->create(mode, TITLE, style);
+    }
+    else
+    {
+        mode = sf::VideoMode::getDesktopMode();
+        style = sf::Style::Fullscreen;
+        window->create(mode, TITLE, style);
+        window->setVerticalSyncEnabled(true);
+        // Обход SFML's bug #921
+        window->setView(sf::View(
+            sf::FloatRect(0.0f, 0.0f, static_cast<float>(mode.width), static_cast<float>(mode.height))
+        ));
+    }
+    windowed = _windowed;
+    sizes.screen_w = mode.width;
+    sizes.screen_h = mode.height;
+
+    int tile_w = (sizes.screen_w - (_LC_OFST * 2)) / WORLD_DIM - ((sizes.screen_w - (_LC_OFST * 2)) / WORLD_DIM) % 2;
+    int tile_h = tile_w / 2;
+    int tile_hw = tile_w / 2;
+    int tile_hh = tile_h / 2 + (tile_h / 2) % 2;
+    sizes.room_w = tile_w * WORLD_DIM;
+    sizes.room_h = tile_h * WORLD_DIM;
+    sizes.lc_ofst = (sizes.screen_w - sizes.room_w) / 2;
+    sizes.tc_ofst = (sizes.screen_h - sizes.room_h) / 2;
+    sizes.spr_scale = tile_w / SPR_SIZE;
+    sizes.bkg_scale = ((sizes.screen_w > sizes.screen_h) ? sizes.screen_w : sizes.screen_h) / BKG_SIZE;
 }
 
 void Engine::frame_render()
@@ -142,18 +141,35 @@ void Engine::frame_render()
 
     if (!window->isOpen())
         return;
-    window->draw(sprites[sprBKG].sprite);
+    sprite_draw(&sprites[sprBKG].sprite, sizes.screen_w / 2.0f, sizes.screen_h / 2.0f, sizes.bkg_scale);
+    
     field_draw();
     // Отображаем игровую информацию
     snprintf(buffer, sizeof(buffer), "Level %d", level + 1);
-    text_print(static_cast<float>(LC_OFST), static_cast<float>(LC_OFST), TEXT_COLOR, reinterpret_cast<char*>(&buffer));
+    text_print(
+        static_cast<float>(sizes.lc_ofst), 
+        static_cast<float>(sizes.lc_ofst), 
+        TEXT_COLOR, 
+        reinterpret_cast<char*>(&buffer)
+    );
     switch (the_state)
     {
     case gsLOSS:
-        text_print(static_cast<float>(SCREEN_W / 2), static_cast<float>(SCREEN_H / 2), TEXT_COLOR, "YOU LOSS!", true); // Запомнилось из какой-то древней игрушки
+        text_print(
+            static_cast<float>(sizes.screen_w / 2), 
+            static_cast<float>(sizes.screen_h / 2), 
+            TEXT_COLOR, "YOU LOSS!", 
+            true
+        ); // Запомнилось из какой-то древней игрушки
         break;
     case gsWIN:
-        text_print(static_cast<float>(SCREEN_W / 2), static_cast<float>(SCREEN_H / 2), TEXT_COLOR, "LEVEL UP!", true);
+        text_print(
+            static_cast<float>(sizes.screen_w / 2), 
+            static_cast<float>(sizes.screen_h / 2), 
+            TEXT_COLOR, 
+            "LEVEL UP!", 
+            true
+        );
         break;
     }
     window->display();
@@ -164,6 +180,7 @@ void Engine::input_process()
 {
     sf::Event evt;
     bool do_close = false;
+    bool chmode = false;
 
     if (!window->isOpen())
         return;
@@ -175,8 +192,15 @@ void Engine::input_process()
             do_close = true;
             break;
         case sf::Event::KeyPressed:
-            if (evt.key.code == sf::Keyboard::Escape)
+            switch (evt.key.code)
+            {
+            case sf::Keyboard::Escape:
                 do_close = true;
+                break;
+            case sf::Keyboard::F11:
+                chmode = true;
+                break;
+            }
             break;
         case sf::Event::MouseButtonPressed:
             mouse_p.x = evt.mouseButton.x;
@@ -206,6 +230,8 @@ void Engine::input_process()
             break;
         }
     }
+    if (chmode)
+        videomode_set(!windowed);
     if (do_close)
         window->close();
 }
@@ -338,22 +364,22 @@ void Engine::field_draw()
         for (int x = 0; x < WORLD_DIM; x++)
         {
             if (the_field.cells[y][x].attribs.count(Cell::atrOBSTACLE) == 0)
-                tile_draw(&sprites[sprTILE].sprite, x, y, SPR_SCALE);
+                tile_draw(&sprites[sprTILE].sprite, x, y, sizes.spr_scale);
             if (the_field.cells[y][x].attribs.count(Cell::atrEXIT) > 0)
-                tile_draw(&sprites[sprEXIT].sprite, x, y, SPR_SCALE);
+                tile_draw(&sprites[sprEXIT].sprite, x, y, sizes.spr_scale);
         };
     // Рисуем стены
     for (int i = 0; i < WORLD_DIM; i++)
-        tile_draw(&sprites[sprRWALL].sprite, i, 0, SPR_SCALE);
+        tile_draw(&sprites[sprRWALL].sprite, i, 0, sizes.spr_scale);
     for (int i = 0; i < WORLD_DIM; i++)
-        tile_draw(&sprites[sprLWALL].sprite, 0, i, SPR_SCALE);
+        tile_draw(&sprites[sprLWALL].sprite, 0, i, sizes.spr_scale);
     // Рисуем пушки
     for (Artillery::Settings::iterator it = the_artillery.setting.begin(); it != the_artillery.setting.end(); ++it)
     {
         if (fabs(it->speed.x) < std::numeric_limits<float>::epsilon())
-            tile_draw(&sprites[sprRBATT].sprite, it->position.x, it->position.y, SPR_SCALE);
+            tile_draw(&sprites[sprRBATT].sprite, it->position.x, it->position.y, sizes.spr_scale);
         else
-            tile_draw(&sprites[sprLBATT].sprite, it->position.x, it->position.y, SPR_SCALE);
+            tile_draw(&sprites[sprLBATT].sprite, it->position.x, it->position.y, sizes.spr_scale);
     }
     // Заполняем список юнитов с их экранными координатами
     ScreenPositions positions;
@@ -371,15 +397,15 @@ void Engine::field_draw()
         switch (it->unit->id()) {
         case Unit::utCharacter:
             if (the_character->path_requested)
-                sprite_draw(&sprites[sprCHART].sprite, it->x, it->y, SPR_SCALE);
+                sprite_draw(&sprites[sprCHART].sprite, it->x, it->y, sizes.spr_scale);
             else
-                sprite_draw(&sprites[sprCHAR].sprite, it->x, it->y, SPR_SCALE);
+                sprite_draw(&sprites[sprCHAR].sprite, it->x, it->y, sizes.spr_scale);
             break;
         case Unit::utFireball:
-            sprite_draw(&sprites[sprFBALL].sprite, it->x, it->y, SPR_SCALE * 0.5f);
+            sprite_draw(&sprites[sprFBALL].sprite, it->x, it->y, sizes.spr_scale * 0.5f);
             break;
         case Unit::utGuard:
-            sprite_draw(&sprites[it->unit->speed.x >= 0.0f ? sprRGUARD : sprLGUARD].sprite, it->x, it->y, SPR_SCALE);
+            sprite_draw(&sprites[it->unit->speed.x >= 0.0f ? sprRGUARD : sprLGUARD].sprite, it->x, it->y, sizes.spr_scale);
         }
     }
 }
@@ -447,6 +473,35 @@ void Engine::text_print(float x, float y, unsigned color, const char* str, bool 
         text.setOrigin(0.0f, 0.0f);
     text.setPosition(x, y);
     window->draw(text);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Трансформация пространственных координат в экранные
+void Engine::space_to_screen(float *x, float *y, const SpacePosition &position)
+{
+    float xsk = position.x * SK45;
+    float ysk = position.y * SK45;
+    float tx = xsk - ysk;
+    float ty = xsk + ysk;
+    *x = sizes.lc_ofst + (HYP2 / 2.0f + tx) * sizes.room_w / HYP2;
+    *y = sizes.tc_ofst + (HYP2 / 2.0f + ty) * sizes.room_h / HYP2;
+}
+
+// Трансформация экранных координат в пространственные
+void Engine::screen_to_space(SpacePosition *position, float x, float y)
+{
+    float k = 2.0f * sizes.room_h * sizes.room_w * SK45 / HYP2;
+    float lorh = static_cast<float>(sizes.lc_ofst * sizes.room_h);
+    position->x = -(-x * sizes.room_h + lorh + sizes.room_w * (sizes.tc_ofst + sizes.room_h - y)) / k;
+    position->y = -(x * sizes.room_h - lorh + sizes.room_w * (sizes.tc_ofst - y)) / k;
+}
+
+// Выбор ячейки по экранным координатам
+void Engine::screen_to_field(int *fx, int *fy, float sx, float sy)
+{
+    SpacePosition position;
+    screen_to_space(&position, sx, sy);
+    Field::pos_to_cell(fx, fy, position);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
