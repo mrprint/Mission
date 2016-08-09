@@ -263,7 +263,7 @@ void Engine::update(sf::Time tdelta)
         }
         else
         {
-            // Показываем баннер и выполняем базовые настройки при по смене состояния
+            // Показываем баннер и выполняем базовые настройки при смене состояния
             banner_timeout = BANNER_TOUT;
             switch (the_state)
             {
