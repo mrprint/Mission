@@ -54,7 +54,7 @@ public:
         int x, y;
     };
 
-    std::set<Attribute> attribs;
+    Attributes attribs;
 
     Cell() {};
     Cell(const Cell&);
