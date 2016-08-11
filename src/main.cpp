@@ -52,13 +52,13 @@ bool Coworker::flags_get(unsigned _flags)
     return result;
 }
 
-void Coworker::path_find_request(const Field &_field, int xStart, int yStart, int xFinish, int yFinish)
+void Coworker::path_find_request(const Field &_field, int st_x, int st_y, int fn_x, int fn_y)
 {
     if (flags_get(cwREADY))
     {
         field = &_field;
-        start_p.x = xStart; start_p.y = yStart;
-        finish_p.x = xFinish; finish_p.y = yFinish;
+        start_p.x = st_x; start_p.y = st_y;
+        finish_p.x = fn_x; finish_p.y = fn_y;
         flags_clear(cwREADY);
     }
     flags_set(cwSTART);
