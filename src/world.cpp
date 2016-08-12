@@ -173,7 +173,7 @@ void Character::move(float tdelta)
             // Следующий этап
             Field::pos_to_cell(&x, &y, position);
             ++way.stage;
-            delta = way.path.at(way.path.size() - way.stage - 1);
+            delta = way.path[way.path.size() - way.stage - 1];
             way.neighbour.x += delta.x;
             way.neighbour.y += delta.y;
             Field::cell_to_pos(&way.neigpos, way.neighbour.x, way.neighbour.y);
@@ -234,7 +234,7 @@ void Character::way_new_process()
     if (way.path.size() > 0)
     {
         way.stage = 0;
-        delta = way.path.at(way.path.size() - 1);
+        delta = way.path[way.path.size() - 1];
         way.neighbour.x = x + delta.x;
         way.neighbour.y = y + delta.y;
         Field::cell_to_pos(&way.neigpos, way.neighbour.x, way.neighbour.y);
