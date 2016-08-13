@@ -278,8 +278,8 @@ void world_setup()
     the_character->way.target.y = WORLD_DIM - 1;
     the_character->set_speed();
     // Стража
-    the_alives.push_back(new Guard());
-    unit = the_alives.back();
+    unit = new Guard();
+    the_alives.push_back(unit);
     Field::cell_to_pos(&unit->position, 0, 2);
     unit->size = U_SIZE * 1.5f;
     unit->speed.x = GUARD_B_SPEED;
@@ -330,8 +330,8 @@ void move_do(float tdelta)
         if (it->timeout <= 0.0f)
         {
             it->timeout = it->delay;
-            the_alives.push_back(new Fireball());
-            unit = the_alives.back();
+            unit = new Fireball();
+            the_alives.push_back(unit);
             Field::cell_to_pos(&unit->position, it->position.x, it->position.y);
             if (it->speed.x > 0.0f)
                 unit->position.x -= CELL_HW;

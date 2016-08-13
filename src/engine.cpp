@@ -158,7 +158,8 @@ void Engine::frame_render()
         text_print(
             static_cast<float>(sizes.screen_w / 2), 
             static_cast<float>(sizes.screen_h / 2), 
-            TEXT_COLOR, "YOU LOSS!", 
+            TEXT_COLOR,
+            "YOU LOSS!",
             true
         ); // Запомнилось из какой-то древней игрушки
         break;
