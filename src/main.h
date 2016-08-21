@@ -4,6 +4,7 @@
 #include <SFML/System.hpp>
 #include "world.h"
 #include "pathfinding.h"
+#include "spaces.h"
 
 // Вспомогательный поток расчета пути
 class Coworker
@@ -13,7 +14,7 @@ class Coworker
     sf::Thread thread;
 
     const Field *field;
-    Cell::Coordinates start_p, finish_p;
+    DeskPosition start_p, finish_p;
     Path path;
 
 public:
@@ -24,18 +25,13 @@ public:
         cwDONE = 4,
     };
 
-    Coworker() : flags(cwREADY), thread(&Coworker::body, this)
-    {
-        field = NULL;
-        start_p.x = 0; start_p.y = 0;
-        finish_p.x = 0; finish_p.y = 0;
-    }
+    Coworker() : flags(cwREADY), thread(&Coworker::body, this), field(NULL) {}
     void start();
     void stop();
     void flags_set(unsigned);
     void flags_clear(unsigned);
     bool flags_get(unsigned);
-    void path_find_request(const Field&, int, int, int, int); // Запрос на расчёт пути
+    void path_find_request(const Field&, DeskPosition, DeskPosition); // Запрос на расчёт пути
     const Path& path_read(); // Получение результата
 
 private:

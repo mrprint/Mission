@@ -6,6 +6,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include "world.h"
+#include "spaces.h"
 
 // Вся информация о текстуре и её инициализации
 struct TextureInfo {
@@ -61,6 +62,8 @@ struct DrawingSizes
     int tc_ofst; // Отступ верхнего угла комнаты от края экрана
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
 class Engine
 {
     enum ControlState {
@@ -68,19 +71,19 @@ class Engine
         csRMBUTTON
     };
 
-    sf::RenderWindow* window;
-    DrawingSizes sizes;
-    
+    sf::RenderWindow* window;  
     sf::Font font;
     std::vector<TextureInfo> textures;
     std::vector<SpriteInfo> sprites;
     std::vector<SoundInfo> sounds;
     std::set<ControlState> controls;
-    sf::Vector2i mouse_p;
+    ScreenPosition mouse_p;
     Orchestre played_sounds;
     float banner_timeout;
     bool windowed;
 public:
+    DrawingSizes sizes;
+
     Engine();
     ~Engine();
     void work_do();
@@ -91,15 +94,14 @@ private:
     void frame_render();
     void input_process();
     void update(sf::Time);
-    void sprite_draw(sf::Sprite*, float, float, float);
-    void tile_draw(sf::Sprite*, int, int, float);
+    void sprite_draw(sf::Sprite*, const ScreenPosition&, float);
     void field_draw();
-    void path_change(int, int);
-    bool cell_flip(int, int);
+    void path_change(DeskPosition);
+    bool cell_flip(DeskPosition);
     void sounds_play();
-    void text_print(float, float, unsigned, const char*, bool = false);
-    void space_to_screen(float*, float*, const SpacePosition&);
-    void screen_to_space(SpacePosition*, float, float);
-    void screen_to_field(int*, int*, float, float);
+    void text_print(ScreenPosition, unsigned, const char*, bool = false);
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
+extern Engine engine;

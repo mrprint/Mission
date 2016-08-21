@@ -28,7 +28,4 @@ static const float LEVEL_COMPL = 0.2f;
 
 static const float BANNER_TOUT = 3.0f;
 
-static inline float to_space_dim(int v)
-{
-    return static_cast<float>(v + 1) / WORLD_DIM * 2.0f - CELL_HW - 1.0f;
-}
+static const float F_EPSILON = 0.0000001f;

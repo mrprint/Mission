@@ -18,5 +18,6 @@ add_executable(mission
 	src/main.cpp 
 	src/world.cpp 
 	src/engine.cpp
+	src/spaces.cpp
 )
 target_link_libraries(mission ${SFML_LIBRARIES})

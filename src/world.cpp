@@ -5,12 +5,9 @@
 #include <cstdlib>
 #include "settings.h"
 #include "world.h"
+#include "spaces.h"
 #include "pathfinding.h"
 #include "main.h"
-
-#if _MSC_VER && (_MSC_VER < 1800) && !__INTEL_COMPILER
-#define copysignf _copysign
-#endif
 
 unsigned level;
 GameState the_state;
@@ -47,7 +44,7 @@ static inline float deviation_apply(float val, float dev)
 template<class T>
 static inline T round(T number)
 {
-    return number < T(0.0) ? ceil(number - T(0.5)) : floor(number + T(0.5));
+    return number < static_cast<T>(0.0) ? ceil(number - static_cast<T>(0.5)) : floor(number + static_cast<T>(0.5));
 }
 
 static inline int complexity_apply(int val, float kc)
@@ -85,27 +82,10 @@ Field::Field(const Field& field)
             cells[y][x] = field.cells[y][x];
 }
 
-void Field::cell_to_pos(SpacePosition *position, int x, int y)
-{
-    position->x = to_space_dim(x);
-    position->y = to_space_dim(y);
-}
-
-void Field::pos_to_cell(int *x, int *y, const SpacePosition &position)
-{
-    float k = WORLD_DIM / 2.0f;
-    *x = static_cast<int>(floor((position.x + 1.0f) * k));
-    *y = static_cast<int>(floor((position.y + 1.0f) * k));
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 Unit::Unit()
 {
     size = U_SIZE;
-    position.x = 0.0f;
-    position.y = 0.0f;
-    speed.x = 0.0f;
-    speed.y = 0.0f;
 }
 
 Unit::Unit(const Unit& unit)
@@ -117,15 +97,12 @@ Unit::Unit(const Unit& unit)
 
 bool Unit::is_collided(const Unit& unit) const
 {
-    float a = position.x - unit.position.x;
-    float b = position.y - unit.position.y;
-    return sqrt(a * a + b * b) < size + unit.size;
+    return position >> unit.position < size + unit.size;
 }
 
 void Unit::move(float tdelta)
 {
-    position.x += speed.x * tdelta;
-    position.y += speed.y * tdelta;
+    position += speed * tdelta;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -133,8 +110,7 @@ Character::Character() : Unit()
 {
     path_requested = false;
     way.path.clear(); // Стоит на месте
-    way.target.x = 0;
-    way.target.y = 0;
+    way.target = 0;
 }
 
 Character::Character(const Character& character) : Unit(character)
@@ -145,17 +121,15 @@ Character::Character(const Character& character) : Unit(character)
 
 void Character::move(float tdelta)
 {
-    Cell::Coordinates delta;
-    int x, y;
     if (the_state == gsINPROGRESS)
         // Перемещаемся только во время игры
         Unit::move(tdelta);
     if (way.path.size() == 0)
         return;
-    if ((speed.x > 0.0f && position.x >= way.neigpos.x)
-        || (speed.x < 0.0f && position.x <= way.neigpos.x)
-        || (speed.y > 0.0f && position.y >= way.neigpos.y)
-        || (speed.y < 0.0f && position.y <= way.neigpos.y))
+    if ((speed.x > F_EPSILON && position.x >= way.neigpos.x)
+        || (speed.x < -F_EPSILON && position.x <= way.neigpos.x)
+        || (speed.y > F_EPSILON && position.y >= way.neigpos.y)
+        || (speed.y < -F_EPSILON && position.y <= way.neigpos.y))
     {
         // Этап завершен
         position = way.neigpos;
@@ -164,19 +138,14 @@ void Character::move(float tdelta)
             // Цель достигнута
             way.path.clear();
             way.stage = 0;
-            Field::pos_to_cell(&x, &y, position);
-            way.target.x = x;
-            way.target.y = y;
+            way.target = position;
         }
         else
         {
             // Следующий этап
-            Field::pos_to_cell(&x, &y, position);
             ++way.stage;
-            delta = way.path[way.path.size() - way.stage - 1];
-            way.neighbour.x += delta.x;
-            way.neighbour.y += delta.y;
-            Field::cell_to_pos(&way.neigpos, way.neighbour.x, way.neighbour.y);
+            way.neighbour += way.path[way.path.size() - way.stage - 1];
+            way.neigpos = way.neighbour;
         }
         set_speed();
     }
@@ -184,60 +153,39 @@ void Character::move(float tdelta)
 
 void Character::set_speed()
 {
-    float dx, dy, adx, ady, a;
     if (way.path.size() == 0)
     {
-        speed.x = 0.0f;
-        speed.y = 0.0f;
+        speed = 0.0f;
         return;
     }
-    dx = way.neigpos.x - position.x;
-    dy = way.neigpos.y - position.y;
-    adx = fabs(dx);
-    ady = fabs(dy);
-    if ((adx < std::numeric_limits<float>::epsilon() && ady < std::numeric_limits<float>::epsilon()) || way.path.size() == 0)
+    SpacePosition d = way.neigpos - position;
+    if (d.x < F_EPSILON && d.x > -F_EPSILON && d.y < F_EPSILON && d.y > -F_EPSILON)
+    {
+        speed = 0.0f;
         return;
-    if (adx > ady)
-    {
-        a = atan(ady / adx);
-        speed.x = copysignf(CHAR_B_SPEED * cos(a), dx);
-        speed.y = copysignf(CHAR_B_SPEED * sin(a), dy);
     }
-    else
-    {
-        a = atan(adx / ady);
-        speed.x = copysignf(CHAR_B_SPEED * sin(a), dx);
-        speed.y = copysignf(CHAR_B_SPEED * cos(a), dy);
-    }
+    float a = atan2(d.x, d.y);
+    speed = SpacePosition(static_cast<float>(sin(a)), static_cast<float>(cos(a))) * CHAR_B_SPEED;
 }
 
 // Запрос обсчета пути
-void Character::way_new_request(int tx, int ty)
+void Character::way_new_request(DeskPosition pos)
 {
-    int x, y;
-    speed.x = 0.0f;
-    speed.y = 0.0f;
-    Field::pos_to_cell(&x, &y, position);
-    way.target.x = tx;
-    way.target.y = ty;
-    the_coworker.path_find_request(the_field, x, y, tx, ty);
+    speed = 0.0f;
+    way.target = pos;
+    the_coworker.path_find_request(the_field, position, pos);
     path_requested = true;
 }
 
 // Обработка рассчитанного пути
 void Character::way_new_process()
 {
-    Cell::Coordinates delta;
-    int x, y;
     way.path = the_coworker.path_read();
-    Field::pos_to_cell(&x, &y, position);
     if (way.path.size() > 0)
     {
         way.stage = 0;
-        delta = way.path[way.path.size() - 1];
-        way.neighbour.x = x + delta.x;
-        way.neighbour.y = y + delta.y;
-        Field::cell_to_pos(&way.neigpos, way.neighbour.x, way.neighbour.y);
+        way.neighbour = static_cast<DeskPosition>(position) + way.path[way.path.size() - 1];
+        way.neigpos = way.neighbour;
     }
     set_speed();
 }
@@ -245,12 +193,11 @@ void Character::way_new_process()
 ////////////////////////////////////////////////////////////////////////////////
 void Guard::move(float tdelta)
 {
-    int x, y;
     Unit::move(tdelta);
-    Field::pos_to_cell(&x, &y, position);
-    if (the_field.cells[y][x].attribs.count(Cell::atrGUARDBACKW) > 0)
+    DeskPosition dp = position;
+    if (the_field[dp].attribs.count(Cell::atrGUARDBACKW) > 0)
         speed.x = -fabs(speed.x);
-    if (the_field.cells[y][x].attribs.count(Cell::atrGUARDFORW) > 0)
+    if (the_field[dp].attribs.count(Cell::atrGUARDFORW) > 0)
         speed.x = fabs(speed.x);
 }
 
@@ -266,38 +213,32 @@ void world_setup()
     // Размечаем поле
     for (int y = 0; y < WORLD_DIM; y++)
         for (int x = 0; x < WORLD_DIM; x++)
-            the_field.cells[y][x].attribs.clear();
-    the_field.cells[0][WORLD_DIM - 1].attribs.insert(Cell::atrEXIT); // Позиция выхода
-    the_field.cells[2][0].attribs.insert(Cell::atrGUARDFORW); // Вешка направления движения охраны
-    the_field.cells[2][WORLD_DIM - 1].attribs.insert(Cell::atrGUARDBACKW); // Вешка направления движения охраны
+            the_field(x, y).attribs.clear();
+    the_field(WORLD_DIM - 1, 0).attribs.insert(Cell::atrEXIT); // Позиция выхода
+    the_field(0, 2).attribs.insert(Cell::atrGUARDFORW); // Вешка направления движения охраны
+    the_field(WORLD_DIM - 1, 2).attribs.insert(Cell::atrGUARDBACKW); // Вешка направления движения охраны
     // Главный герой
     the_character = new Character();
     the_alives.push_back(the_character);
-    Field::cell_to_pos(&the_character->position, 0, WORLD_DIM - 1);
-    the_character->way.target.x = 0;
-    the_character->way.target.y = WORLD_DIM - 1;
+    the_character->position = DeskPosition(0, WORLD_DIM - 1);
+    the_character->way.target = DeskPosition(0, WORLD_DIM - 1);
     the_character->set_speed();
     // Стража
     unit = new Guard();
     the_alives.push_back(unit);
-    Field::cell_to_pos(&unit->position, 0, 2);
+    unit->position = DeskPosition(0, 2);
     unit->size = U_SIZE * 1.5f;
-    unit->speed.x = GUARD_B_SPEED;
-    unit->speed.y = 0.0f;
+    unit->speed = Speed(GUARD_B_SPEED, 0.0f);
     // Артиллерия
     Artillery::Settings apositions(WORLD_DIM * 2 - 2);
     for (i = 0; i < WORLD_DIM - 1; i++)
     {
-        apositions[i].position.x = i;
-        apositions[i].position.y = 0;
-        apositions[i].speed.x = 0.0f;
-        apositions[i].speed.y = deviation_apply(ART_B_SPEED, ART_DEV);
+        apositions[i].position = DeskPosition(i, 0);
+        apositions[i].speed = Speed(0.0f, deviation_apply(ART_B_SPEED, ART_DEV));
         apositions[i].delay = deviation_apply(ART_B_DELAY, ART_DEV);
         apositions[i].timeout = 0.0f;
-        apositions[WORLD_DIM - 1 + i].position.x = 0;
-        apositions[WORLD_DIM - 1 + i].position.y = i;
-        apositions[WORLD_DIM - 1 + i].speed.x = deviation_apply(complexity_apply(ART_B_SPEED, LEVEL_COMPL), ART_DEV);
-        apositions[WORLD_DIM - 1 + i].speed.y = 0.0f;
+        apositions[WORLD_DIM - 1 + i].position = DeskPosition(0, i);
+        apositions[WORLD_DIM - 1 + i].speed = Speed(deviation_apply(complexity_apply(ART_B_SPEED, LEVEL_COMPL), ART_DEV), 0.0f);
         apositions[WORLD_DIM - 1 + i].delay = deviation_apply(ART_B_DELAY, ART_DEV);
         apositions[WORLD_DIM - 1 + i].timeout = 0.0f;
     }
@@ -332,7 +273,7 @@ void move_do(float tdelta)
             it->timeout = it->delay;
             unit = new Fireball();
             the_alives.push_back(unit);
-            Field::cell_to_pos(&unit->position, it->position.x, it->position.y);
+            unit->position = it->position;
             if (it->speed.x > 0.0f)
                 unit->position.x -= CELL_HW;
             else
@@ -347,9 +288,8 @@ void move_do(float tdelta)
 // Проверка состояния игры
 void state_check()
 {
-    int x, y;
-    Field::pos_to_cell(&x, &y, the_character->position);
-    if (the_field.cells[y][x].attribs.count(Cell::atrEXIT) > 0)
+    //DeskPosition dp = the_character->position;
+    if (the_field[the_character->position].attribs.count(Cell::atrEXIT) > 0)
     {
         the_state = gsWIN;
         return;

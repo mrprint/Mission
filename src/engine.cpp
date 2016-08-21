@@ -5,8 +5,10 @@
 #include <SFML/Audio.hpp>
 #include "engine.h"
 #include "settings.h"
+#include "spaces.h"
 #include "world.h"
 #include "main.h"
+
 
 #if _MSC_VER && (_MSC_VER < 1800) && !__INTEL_COMPILER
 #define snprintf(buff, sz, str, ...) sprintf(buff, str, __VA_ARGS__)
@@ -15,8 +17,6 @@
 static const float BKG_SIZE = 1024.0f;
 static const float SPR_SIZE = 128.0f;
 static const float TILE_HOT = SPR_SIZE * 0.75f;
-static const float SK45 = 0.7071067812f;
-static const float HYP2 = 2.828427125f;
 static const unsigned TEXT_COLOR = 0xFF0010FF;
 static const char *RES_DIR = "resources/";
 
@@ -32,13 +32,15 @@ enum SoundIndexes {
 };
 
 // Юнит с рассчитанным расположением на экране
-struct ScreenPos {
-    float x, y;
+struct UnitOnScreen {
+    ScreenPosition pos;
     Unit *unit;
-    bool operator<(const ScreenPos &sp) { return (y < sp.y); }
+    bool operator<(const UnitOnScreen &u) { return (pos.y < u.pos.y); }
 };
 
-typedef std::vector<ScreenPos> ScreenPositions; // Список расположения юнитов
+typedef std::vector<UnitOnScreen> ScreenPositions; // Список расположения юнитов
+
+Engine engine;
 
 ////////////////////////////////////////////////////////////////////////////////
 Engine::Engine()
@@ -141,14 +143,13 @@ void Engine::frame_render()
 
     if (!window->isOpen())
         return;
-    sprite_draw(&sprites[sprBKG].sprite, sizes.screen_w / 2.0f, sizes.screen_h / 2.0f, sizes.bkg_scale);
+    sprite_draw(&sprites[sprBKG].sprite, ScreenPosition(sizes.screen_w, sizes.screen_h) / 2.0f, sizes.bkg_scale);
     
     field_draw();
     // Отображаем игровую информацию
     snprintf(buffer, sizeof(buffer), "Level %d", level + 1);
     text_print(
-        static_cast<float>(sizes.lc_ofst), 
-        static_cast<float>(sizes.lc_ofst), 
+        ScreenPosition(static_cast<float>(sizes.lc_ofst)), 
         TEXT_COLOR, 
         reinterpret_cast<char*>(&buffer)
     );
@@ -156,8 +157,7 @@ void Engine::frame_render()
     {
     case gsLOSS:
         text_print(
-            static_cast<float>(sizes.screen_w / 2), 
-            static_cast<float>(sizes.screen_h / 2), 
+            ScreenPosition(sizes.screen_w, sizes.screen_h) / 2.0f,
             TEXT_COLOR,
             "YOU LOSS!",
             true
@@ -165,8 +165,7 @@ void Engine::frame_render()
         break;
     case gsWIN:
         text_print(
-            static_cast<float>(sizes.screen_w / 2), 
-            static_cast<float>(sizes.screen_h / 2), 
+            ScreenPosition(sizes.screen_w, sizes.screen_h) / 2.0f,
             TEXT_COLOR, 
             "LEVEL UP!", 
             true
@@ -204,8 +203,7 @@ void Engine::input_process()
             }
             break;
         case sf::Event::MouseButtonPressed:
-            mouse_p.x = evt.mouseButton.x;
-            mouse_p.y = evt.mouseButton.y;
+            mouse_p = ScreenPosition(evt.mouseButton.x, evt.mouseButton.y);
             switch (evt.mouseButton.button)
             {
             case sf::Mouse::Left:
@@ -217,8 +215,7 @@ void Engine::input_process()
             }
             break;
         case sf::Event::MouseButtonReleased:
-            mouse_p.x = evt.mouseButton.x;
-            mouse_p.y = evt.mouseButton.y;
+            mouse_p = ScreenPosition(evt.mouseButton.x, evt.mouseButton.y);
             switch (evt.mouseButton.button)
             {
             case sf::Mouse::Left:
@@ -289,7 +286,7 @@ void Engine::update(sf::Time tdelta)
         if (!the_character->path_requested && the_coworker.flags_get(Coworker::cwREADY) && !lb_down)
         {
             // Будем идти в указанную позицию
-            path_change(mouse_p.x, mouse_p.y);
+            path_change(mouse_p);
             lb_down = true;
         }
     }
@@ -301,11 +298,11 @@ void Engine::update(sf::Time tdelta)
         if (!the_character->path_requested && the_coworker.flags_get(Coworker::cwREADY) && !rb_down)
         {
             // Пытаемся изменить состояние ячейки "свободна"/"препятствие"
-            if (cell_flip(mouse_p.x, mouse_p.y))
+            if (cell_flip(mouse_p))
             {
                 // При необходимости обсчитываем изменения пути
                 if (the_character->way.path.size() > 0)
-                    the_character->way_new_request(the_character->way.target.x, the_character->way.target.y);
+                    the_character->way_new_request(the_character->way.target);
             }
             rb_down = true;
         }
@@ -340,21 +337,11 @@ void Engine::work_do()
     main_loop();
 }
 
-void Engine::sprite_draw(sf::Sprite *spr, float x, float y, float scale)
+void Engine::sprite_draw(sf::Sprite *spr, const ScreenPosition &pos, float scale)
 {
-    spr->setPosition(x, y);
+    spr->setPosition(pos);
     spr->setScale(scale, scale);
     window->draw(*spr);
-}
-
-// Отрисовка тайла в позиции ячейки
-void Engine::tile_draw(sf::Sprite *spr, int cx, int cy, float scale)
-{
-    SpacePosition position;
-    float x, y;
-    Field::cell_to_pos(&position, cx, cy);
-    space_to_screen(&x, &y, position);
-    sprite_draw(spr, x, y, scale);
 }
 
 // Отрисовка игрового поля
@@ -364,32 +351,32 @@ void Engine::field_draw()
     for (int y = 0; y < WORLD_DIM; y++)
         for (int x = 0; x < WORLD_DIM; x++)
         {
-            if (the_field.cells[y][x].attribs.count(Cell::atrOBSTACLE) == 0)
-                tile_draw(&sprites[sprTILE].sprite, x, y, sizes.spr_scale);
-            if (the_field.cells[y][x].attribs.count(Cell::atrEXIT) > 0)
-                tile_draw(&sprites[sprEXIT].sprite, x, y, sizes.spr_scale);
+            if (the_field(x, y).attribs.count(Cell::atrOBSTACLE) == 0)
+                sprite_draw(&sprites[sprTILE].sprite, DeskPosition(x, y), sizes.spr_scale);
+            if (the_field(x, y).attribs.count(Cell::atrEXIT) > 0)
+                sprite_draw(&sprites[sprEXIT].sprite, DeskPosition(x, y), sizes.spr_scale);
         };
     // Рисуем стены
     for (int i = 0; i < WORLD_DIM; i++)
-        tile_draw(&sprites[sprRWALL].sprite, i, 0, sizes.spr_scale);
+        sprite_draw(&sprites[sprRWALL].sprite, DeskPosition(i, 0), sizes.spr_scale);
     for (int i = 0; i < WORLD_DIM; i++)
-        tile_draw(&sprites[sprLWALL].sprite, 0, i, sizes.spr_scale);
+        sprite_draw(&sprites[sprLWALL].sprite, DeskPosition(0, i), sizes.spr_scale);
     // Рисуем пушки
     for (Artillery::Settings::iterator it = the_artillery.setting.begin(); it != the_artillery.setting.end(); ++it)
     {
         if (fabs(it->speed.x) < std::numeric_limits<float>::epsilon())
-            tile_draw(&sprites[sprRBATT].sprite, it->position.x, it->position.y, sizes.spr_scale);
+            sprite_draw(&sprites[sprRBATT].sprite, it->position, sizes.spr_scale);
         else
-            tile_draw(&sprites[sprLBATT].sprite, it->position.x, it->position.y, sizes.spr_scale);
+            sprite_draw(&sprites[sprLBATT].sprite, it->position, sizes.spr_scale);
     }
     // Заполняем список юнитов с их экранными координатами
     ScreenPositions positions;
-    ScreenPos upos;
+    UnitOnScreen uos;
     for (UnitsList::iterator it = the_alives.begin(); it != the_alives.end(); ++it)
     {
-        space_to_screen(&upos.x, &upos.y, (*it)->position);
-        upos.unit = *it;
-        positions.push_back(upos);
+        uos.pos = (*it)->position;
+        uos.unit = *it;
+        positions.push_back(uos);
     }
     std::sort(positions.begin(), positions.end()); // Сортируем по экранному y
                                                    // Рисуем юниты от дальних к ближним
@@ -398,42 +385,38 @@ void Engine::field_draw()
         switch (it->unit->id()) {
         case Unit::utCharacter:
             if (the_character->path_requested)
-                sprite_draw(&sprites[sprCHART].sprite, it->x, it->y, sizes.spr_scale);
+                sprite_draw(&sprites[sprCHART].sprite, it->pos, sizes.spr_scale);
             else
-                sprite_draw(&sprites[sprCHAR].sprite, it->x, it->y, sizes.spr_scale);
+                sprite_draw(&sprites[sprCHAR].sprite, it->pos, sizes.spr_scale);
             break;
         case Unit::utFireball:
-            sprite_draw(&sprites[sprFBALL].sprite, it->x, it->y, sizes.spr_scale * 0.5f);
+            sprite_draw(&sprites[sprFBALL].sprite, it->pos, sizes.spr_scale * 0.5f);
             break;
         case Unit::utGuard:
-            sprite_draw(&sprites[it->unit->speed.x >= 0.0f ? sprRGUARD : sprLGUARD].sprite, it->x, it->y, sizes.spr_scale);
+            sprite_draw(&sprites[it->unit->speed.x >= 0.0f ? sprRGUARD : sprLGUARD].sprite, it->pos, sizes.spr_scale);
         }
     }
 }
 
 // Изменение состояния указанной мышкой ячейки
-bool Engine::cell_flip(int mx, int my)
+bool Engine::cell_flip(DeskPosition md)
 {
-    int x, y, cx, cy;
-    screen_to_field(&x, &y, static_cast<float>(mx), static_cast<float>(my));
-    Field::pos_to_cell(&cx, &cy, the_character->position);
-    if (x < 0 || x >= WORLD_DIM || y < 0 || y >= WORLD_DIM || (x == cx && y == cy))
+    DeskPosition dp = the_character->position;
+    if (md.x < 0 || md.x >= WORLD_DIM || md.y < 0 || md.y >= WORLD_DIM || (md.x == dp.x && md.y == dp.y))
         return false;
-    if (the_field.cells[y][x].attribs.count(Cell::atrOBSTACLE) > 0)
-        the_field.cells[y][x].attribs.erase(Cell::atrOBSTACLE);
+    if (the_field[md].attribs.count(Cell::atrOBSTACLE) > 0)
+        the_field[md].attribs.erase(Cell::atrOBSTACLE);
     else
-        the_field.cells[y][x].attribs.insert(Cell::atrOBSTACLE);
+        the_field[md].attribs.insert(Cell::atrOBSTACLE);
     return true;
 }
 
 // Ищем новый путь
-void Engine::path_change(int mx, int my)
+void Engine::path_change(DeskPosition md)
 {
-    int x, y;
-    screen_to_field(&x, &y, static_cast<float>(mx), static_cast<float>(my));
-    if (x < 0 || x >= WORLD_DIM || y < 0 || y >= WORLD_DIM)
+    if (md.x < 0 || md.x >= WORLD_DIM || md.y < 0 || md.y >= WORLD_DIM)
         return;
-    the_character->way_new_request(x, y);
+    the_character->way_new_request(md);
 }
 
 void Engine::sounds_play()
@@ -458,7 +441,7 @@ void Engine::sounds_play()
     }
 }
 
-void Engine::text_print(float x, float y, unsigned color, const char* str, bool centered)
+void Engine::text_print(ScreenPosition pos, unsigned color, const char* str, bool centered)
 {
     sf::Text text;
     text.setFont(font);
@@ -472,37 +455,8 @@ void Engine::text_print(float x, float y, unsigned color, const char* str, bool 
     }
     else
         text.setOrigin(0.0f, 0.0f);
-    text.setPosition(x, y);
+    text.setPosition(pos);
     window->draw(text);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Трансформация пространственных координат в экранные
-void Engine::space_to_screen(float *x, float *y, const SpacePosition &position)
-{
-    float xsk = position.x * SK45;
-    float ysk = position.y * SK45;
-    float tx = xsk - ysk;
-    float ty = xsk + ysk;
-    *x = sizes.lc_ofst + (HYP2 / 2.0f + tx) * sizes.room_w / HYP2;
-    *y = sizes.tc_ofst + (HYP2 / 2.0f + ty) * sizes.room_h / HYP2;
-}
-
-// Трансформация экранных координат в пространственные
-void Engine::screen_to_space(SpacePosition *position, float x, float y)
-{
-    float k = 2.0f * sizes.room_h * sizes.room_w * SK45 / HYP2;
-    float lorh = static_cast<float>(sizes.lc_ofst * sizes.room_h);
-    position->x = -(-x * sizes.room_h + lorh + sizes.room_w * (sizes.tc_ofst + sizes.room_h - y)) / k;
-    position->y = -(x * sizes.room_h - lorh + sizes.room_w * (sizes.tc_ofst - y)) / k;
-}
-
-// Выбор ячейки по экранным координатам
-void Engine::screen_to_field(int *fx, int *fy, float sx, float sy)
-{
-    SpacePosition position;
-    screen_to_space(&position, sx, sy);
-    Field::pos_to_cell(fx, fy, position);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

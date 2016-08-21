@@ -12,7 +12,6 @@ static const int POLL_GRANULARITY = 1000 / 240; // Четверть 60Гц ка�
 Coworker the_coworker;
 
 static FieldsAStar a_star;
-static Engine engine;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,13 +51,13 @@ bool Coworker::flags_get(unsigned _flags)
     return result;
 }
 
-void Coworker::path_find_request(const Field &_field, int st_x, int st_y, int fn_x, int fn_y)
+void Coworker::path_find_request(const Field &_field, DeskPosition st, DeskPosition fn)
 {
     if (flags_get(cwREADY))
     {
         field = &_field;
-        start_p.x = st_x; start_p.y = st_y;
-        finish_p.x = fn_x; finish_p.y = fn_y;
+        start_p = st;
+        finish_p = fn;
         flags_clear(cwREADY);
     }
     flags_set(cwSTART);
