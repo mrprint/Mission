@@ -1,7 +1,7 @@
 ﻿#include <math.h>
-#include "settings.h"
-#include "engine.h"
-#include "spaces.h"
+#include "settings.hpp"
+#include "engine.hpp"
+#include "spaces.hpp"
 
 static const float SK45 = 0.7071067812f;
 static const float HYP2 = 2.828427125f;

@@ -1,11 +1,11 @@
 ﻿#include <string>
 #include <time.h>
 #include <SFML/System.hpp>
-#include "main.h"
-#include "settings.h"
-#include "engine.h"
-#include "world.h"
-#include "pathfinding.h"
+#include "main.hpp"
+#include "settings.hpp"
+#include "engine.hpp"
+#include "world.hpp"
+#include "pathfinding.hpp"
 
 static const int POLL_GRANULARITY = 1000 / 240; // Четверть 60Гц кадра
 

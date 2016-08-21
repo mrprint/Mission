@@ -5,8 +5,8 @@
 #include <set>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
-#include "world.h"
-#include "spaces.h"
+#include "world.hpp"
+#include "spaces.hpp"
 
 // Вся информация о текстуре и её инициализации
 struct TextureInfo {

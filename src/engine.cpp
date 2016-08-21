@@ -3,11 +3,11 @@
 #include <math.h>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
-#include "engine.h"
-#include "settings.h"
-#include "spaces.h"
-#include "world.h"
-#include "main.h"
+#include "engine.hpp"
+#include "settings.hpp"
+#include "spaces.hpp"
+#include "world.hpp"
+#include "main.hpp"
 
 
 #if _MSC_VER && (_MSC_VER < 1800) && !__INTEL_COMPILER

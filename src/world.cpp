@@ -3,11 +3,11 @@
 #include <algorithm>
 #include <limits>
 #include <cstdlib>
-#include "settings.h"
-#include "world.h"
-#include "spaces.h"
-#include "pathfinding.h"
-#include "main.h"
+#include "settings.hpp"
+#include "world.hpp"
+#include "spaces.hpp"
+#include "pathfinding.hpp"
+#include "main.hpp"
 
 unsigned level;
 GameState the_state;

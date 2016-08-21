@@ -2,7 +2,7 @@
 
 #include <math.h>
 #include <SFML/Graphics.hpp>
-#include "settings.h"
+#include "settings.hpp"
 
 // Идентификаторы обособленных классов
 enum {

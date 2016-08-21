@@ -3,9 +3,9 @@
 #include <deque>
 #include <set>
 #include <vector>
-#include "settings.h"
-#include "pathfinding.h"
-#include "spaces.h"
+#include "settings.hpp"
+#include "pathfinding.hpp"
+#include "spaces.hpp"
 
 typedef Vector2D<float> Speed; // Скорость
 

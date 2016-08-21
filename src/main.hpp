@@ -2,9 +2,9 @@
 
 #include <string>
 #include <SFML/System.hpp>
-#include "world.h"
-#include "pathfinding.h"
-#include "spaces.h"
+#include "world.hpp"
+#include "pathfinding.hpp"
+#include "spaces.hpp"
 
 // Вспомогательный поток расчета пути
 class Coworker
