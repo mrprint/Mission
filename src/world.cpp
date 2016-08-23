@@ -298,7 +298,7 @@ void state_check()
     {
         if (*it == the_character)
             continue;
-        if (the_character->is_collided(*(*it)))
+        if (the_character->is_collided(**it))
         {
             the_state = gsLOSS;
             return;

@@ -107,7 +107,7 @@ int main()
     the_state = gsINPROGRESS;
     level = 0;
     world_setup();
-    engine.work_do();
+    the_engine.work_do();
     the_coworker.stop();
     lists_clear();
     return 0;

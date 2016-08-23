@@ -28,4 +28,4 @@ static const float LEVEL_COMPL = 0.2f;
 
 static const float BANNER_TOUT = 3.0f;
 
-static const float F_EPSILON = 0.0000001f;
+static const float F_EPSILON = 1e-7f;

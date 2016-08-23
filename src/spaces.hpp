@@ -4,6 +4,10 @@
 #include <SFML/Graphics.hpp>
 #include "settings.hpp"
 
+////////////////////////////////////////////////////////////////////////////////
+// Координаты в различтных пространствах и автоматические межпространственные 
+// преобразования
+
 // Идентификаторы обособленных классов
 enum {
     icSPACE,
@@ -36,7 +40,7 @@ struct Vector2D
     // dot product
     basetype operator%(const Vector2D& val) const { return x * val.x + y * val.y; }
     // distance
-    basetype operator >> (const Vector2D& val) const { Vector2D t = *this - val; return hypot(t.x, t.y); }
+    basetype operator >> (const Vector2D& val) const { Vector2D t = *this - val; return static_cast<basetype>(hypot(t.x, t.y)); }
     Vector2D rotate(const Vector2D& val) const { return Vector2D(x*val.x - y*val.y, x*val.y + y*val.x); }
 };
 
@@ -77,7 +81,7 @@ struct DeskPosition : _Vector2D_Desk
 };
 
 typedef Vector2D<float, icSCREEN> _Vector2D_Screen;
-// Позиция на дисплее
+// Позиция на дисплее (читает настройки отображения непосредственно из экземпляра Engine)
 struct ScreenPosition : _Vector2D_Screen
 {
     ScreenPosition() {}

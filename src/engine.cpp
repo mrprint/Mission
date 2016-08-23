@@ -40,7 +40,7 @@ struct UnitOnScreen {
 
 typedef std::vector<UnitOnScreen> ScreenPositions; // Список расположения юнитов
 
-Engine engine;
+Engine the_engine; // Экземпляр движка
 
 ////////////////////////////////////////////////////////////////////////////////
 Engine::Engine()
