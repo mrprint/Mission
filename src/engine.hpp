@@ -71,7 +71,7 @@ class Engine
         csRMBUTTON
     };
 
-    sf::RenderWindow* window;  
+    sf::RenderWindow* window;
     sf::Font font;
     std::vector<TextureInfo> textures;
     std::vector<SpriteInfo> sprites;
@@ -99,7 +99,7 @@ private:
     void path_change(DeskPosition);
     bool cell_flip(DeskPosition);
     void sounds_play();
-    void text_print(ScreenPosition, unsigned, const char*, bool = false);
+    void text_print(const ScreenPosition&, unsigned, const char*, bool = false);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

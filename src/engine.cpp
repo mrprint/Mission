@@ -144,13 +144,13 @@ void Engine::frame_render()
     if (!window->isOpen())
         return;
     sprite_draw(&sprites[sprBKG].sprite, ScreenPosition(sizes.screen_w, sizes.screen_h) / 2.0f, sizes.bkg_scale);
-    
+
     field_draw();
     // Отображаем игровую информацию
     snprintf(buffer, sizeof(buffer), "Level %d", level + 1);
     text_print(
-        ScreenPosition(static_cast<float>(sizes.lc_ofst)), 
-        TEXT_COLOR, 
+        ScreenPosition(static_cast<float>(sizes.lc_ofst)),
+        TEXT_COLOR,
         reinterpret_cast<char*>(&buffer)
     );
     switch (the_state)
@@ -166,8 +166,8 @@ void Engine::frame_render()
     case gsWIN:
         text_print(
             ScreenPosition(sizes.screen_w, sizes.screen_h) / 2.0f,
-            TEXT_COLOR, 
-            "LEVEL UP!", 
+            TEXT_COLOR,
+            "LEVEL UP!",
             true
         );
         break;
@@ -432,7 +432,6 @@ void Engine::sounds_play()
         case seHIT:
             played_sounds.play(sounds[sndHIT].buffer);
             break;
-
         case seLVLUP:
             played_sounds.play(sounds[sndLUP].buffer);
             break;
@@ -441,7 +440,7 @@ void Engine::sounds_play()
     }
 }
 
-void Engine::text_print(ScreenPosition pos, unsigned color, const char* str, bool centered)
+void Engine::text_print(const ScreenPosition &pos, unsigned color, const char* str, bool centered)
 {
     sf::Text text;
     text.setFont(font);
