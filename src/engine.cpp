@@ -1,10 +1,10 @@
-﻿#include <limits>
+﻿#include "settings.hpp"
+#include <limits>
 #include <stdio.h>
 #include <math.h>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include "engine.hpp"
-#include "settings.hpp"
 #include "spaces.hpp"
 #include "world.hpp"
 #include "main.hpp"

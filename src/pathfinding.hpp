@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <string.h>
+#include <math.h>
 #include <functional>
 #include <vector>
 #include <queue>
@@ -174,7 +175,8 @@ protected:
 
     static inline TWeight cost_estimate(const TCoords& a, const TCoords& b)
     {
-        return static_cast<TWeight>(10 * (abs(b.x - a.x) + abs(b.y - a.y)));
+        TCoords dt; dt.x = b.x - a.x; dt.y = b.y - a.y;
+        return static_cast<TWeight>(10 * sqrt(dt.x * dt.x + dt.y * dt.y));
     }
 
     static inline bool inbound(int x, int y)

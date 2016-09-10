@@ -1,5 +1,5 @@
-﻿#include <math.h>
-#include "settings.hpp"
+﻿#include "settings.hpp"
+#include <math.h>
 #include "engine.hpp"
 #include "spaces.hpp"
 

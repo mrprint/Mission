@@ -126,7 +126,7 @@ public:
     void way_new_process(); // Обработка рассчитанного пути
 };
 
-// Стажник
+// Стражник
 class Guard : public Unit
 {
 public:

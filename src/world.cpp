@@ -1,9 +1,9 @@
-﻿#include <math.h>
+﻿#include "settings.hpp"
+#include <math.h>
 #include <vector>
 #include <algorithm>
 #include <limits>
 #include <cstdlib>
-#include "settings.hpp"
 #include "world.hpp"
 #include "spaces.hpp"
 #include "pathfinding.hpp"

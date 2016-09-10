@@ -1,8 +1,8 @@
-﻿#include <string>
+﻿#include "settings.hpp"
+#include <string>
 #include <time.h>
 #include <SFML/System.hpp>
 #include "main.hpp"
-#include "settings.hpp"
 #include "engine.hpp"
 #include "world.hpp"
 #include "pathfinding.hpp"
