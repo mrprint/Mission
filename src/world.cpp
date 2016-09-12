@@ -33,9 +33,6 @@ static inline bool rnd_choice(float possib)
     return randomf() < possib;
 }
 
-template<class T>
-static void shuffle(T, T);
-
 static inline float deviation_apply(float val, float dev)
 {
     return (2 * dev * randomf() - dev + 1) * val;
@@ -242,7 +239,7 @@ void world_setup()
         apositions[WORLD_DIM - 1 + i].delay = deviation_apply(ART_B_DELAY, ART_DEV);
         apositions[WORLD_DIM - 1 + i].timeout = 0.0f;
     }
-    shuffle(apositions.begin(), apositions.end());
+    std::random_shuffle(apositions.begin(), apositions.end());
     int acount = std::min(complexity_apply(ART_COUNT, LEVEL_COMPL), static_cast<int>(apositions.capacity()));
     for (i = 0; i < acount; i++)
         the_artillery.setting.push_back(apositions[i]);
@@ -288,7 +285,6 @@ void move_do(float tdelta)
 // Проверка состояния игры
 void state_check()
 {
-    //DeskPosition dp = the_character->position;
     if (the_field[the_character->position].attribs.count(Cell::atrEXIT) > 0)
     {
         the_state = gsWIN;
@@ -314,16 +310,4 @@ void lists_clear()
     the_alives.clear();
     the_artillery.setting.clear();
     the_sounds.clear();
-}
-
-template<class T>
-static void shuffle(T first, T last)
-{
-    typedef typename std::iterator_traits<T>::difference_type diff_t;
-
-    diff_t n = last - first;
-    for (diff_t i = n - 1; i > 0; --i) {
-        using std::swap;
-        swap(first[i], first[static_cast<diff_t>(randint(static_cast<int>(i)))]);
-    }
 }

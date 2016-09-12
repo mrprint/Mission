@@ -358,9 +358,10 @@ void Engine::field_draw()
         };
     // Рисуем стены
     for (int i = 0; i < WORLD_DIM; i++)
+    {
         sprite_draw(&sprites[sprRWALL].sprite, DeskPosition(i, 0), sizes.spr_scale);
-    for (int i = 0; i < WORLD_DIM; i++)
         sprite_draw(&sprites[sprLWALL].sprite, DeskPosition(0, i), sizes.spr_scale);
+    }
     // Рисуем пушки
     for (Artillery::Settings::iterator it = the_artillery.setting.begin(); it != the_artillery.setting.end(); ++it)
     {
