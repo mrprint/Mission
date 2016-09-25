@@ -12,7 +12,7 @@
 unsigned level;
 GameState the_state;
 Field the_field;
-UnitsList the_alives;
+UnitsList the_alives(std::max(std::max(sizeof(Character), sizeof(Guard)), sizeof(Fireball)), WORLD_DIM * WORLD_DIM / 2);
 Artillery the_artillery;
 Character *the_character;
 SoundsQueue the_sounds;
@@ -85,13 +85,6 @@ Unit::Unit()
     size = U_SIZE;
 }
 
-Unit::Unit(const Unit& unit)
-{
-    size = unit.size;
-    position = unit.position;
-    speed = unit.speed;
-}
-
 bool Unit::is_collided(const Unit& unit) const
 {
     return position >> unit.position < size + unit.size;
@@ -110,10 +103,12 @@ Character::Character() : Unit()
     way.target = 0;
 }
 
-Character::Character(const Character& character) : Unit(character)
+Character& Character::operator=(const Character &character)
 {
-    path_requested = false;
+    this->Unit::operator=(character);
     way = character.way;
+    path_requested = character.path_requested;
+    return *this;
 }
 
 void Character::move(float tdelta)
@@ -202,9 +197,6 @@ void Guard::move(float tdelta)
 // Инициализация вселенной
 void world_setup()
 {
-    int i;
-    Unit *unit;
-
     lists_clear();
 
     // Размечаем поле
@@ -215,20 +207,25 @@ void world_setup()
     the_field(0, 2).attribs.insert(Cell::atrGUARDFORW); // Вешка направления движения охраны
     the_field(WORLD_DIM - 1, 2).attribs.insert(Cell::atrGUARDBACKW); // Вешка направления движения охраны
     // Главный герой
-    the_character = new Character();
-    the_alives.push_back(the_character);
-    the_character->position = DeskPosition(0, WORLD_DIM - 1);
-    the_character->way.target = DeskPosition(0, WORLD_DIM - 1);
-    the_character->set_speed();
+    {
+        Character tchar = Character();
+        the_character = reinterpret_cast<Character*>(the_alives.allocate());
+        *the_character = tchar;
+        the_character->position = DeskPosition(0, WORLD_DIM - 1);
+        the_character->way.target = DeskPosition(0, WORLD_DIM - 1);
+        the_character->set_speed();
+    }
     // Стража
-    unit = new Guard();
-    the_alives.push_back(unit);
-    unit->position = DeskPosition(0, 2);
-    unit->size = U_SIZE * 1.5f;
-    unit->speed = Speed(GUARD_B_SPEED, 0.0f);
+    {
+        Guard tgrd = Guard();
+        tgrd.position = DeskPosition(0, 2);
+        tgrd.size = U_SIZE * 1.5f;
+        tgrd.speed = Speed(GUARD_B_SPEED, 0.0f);
+        *reinterpret_cast<Guard*>(the_alives.allocate()) = tgrd;
+    }
     // Артиллерия
     Artillery::Settings apositions(WORLD_DIM * 2 - 2);
-    for (i = 0; i < WORLD_DIM - 1; i++)
+    for (int i = 0; i < WORLD_DIM - 1; i++)
     {
         apositions[i].position = DeskPosition(i, 0);
         apositions[i].speed = Speed(0.0f, deviation_apply(ART_B_SPEED, ART_DEV));
@@ -241,43 +238,49 @@ void world_setup()
     }
     std::random_shuffle(apositions.begin(), apositions.end());
     int acount = std::min(complexity_apply(ART_COUNT, LEVEL_COMPL), static_cast<int>(apositions.capacity()));
-    for (i = 0; i < acount; i++)
+    for (int i = 0; i < acount; i++)
         the_artillery.setting.push_back(apositions[i]);
 }
 
 // Изменения в состоянии мира за отведённый квант времени
 void move_do(float tdelta)
 {
-    Unit *unit;
     // Перемещаем существующие юниты и удаляем отжившие
     for (UnitsList::iterator it = the_alives.begin(); it != the_alives.end();)
     {
-        (*it)->move(tdelta);
-        if ((*it)->position.x > 1.0f || (*it)->position.x < -1.0f || (*it)->position.y > 1.0f || (*it)->position.y < -1.0f)
+        Unit *u = &*it;
+        u->move(tdelta);
+        if (it->position.x > 1.0f || it->position.x < -1.0f || it->position.y > 1.0f || it->position.y < -1.0f)
         {
-            delete *it;
+            it->~Unit();
             it = the_alives.erase(it);
         }
         else
             ++it;
     }
     // Генерируем новые выстрелы
-    for (Artillery::Settings::iterator it = the_artillery.setting.begin(); it != the_artillery.setting.end(); ++it)
     {
-        it->timeout -= tdelta;
-        if (it->timeout <= 0.0f)
+        Fireball *pnewfb, tfball = Fireball();
+        for (Artillery::Settings::iterator it = the_artillery.setting.begin(); it != the_artillery.setting.end(); ++it)
         {
-            it->timeout = it->delay;
-            unit = new Fireball();
-            the_alives.push_back(unit);
-            unit->position = it->position;
-            if (it->speed.x > 0.0f)
-                unit->position.x -= CELL_HW;
-            else
-                unit->position.y -= CELL_HW;
-            unit->size = U_SIZE;
-            unit->speed = it->speed;
-            the_sounds.push_back(seSHOT);
+            it->timeout -= tdelta;
+            if (it->timeout <= 0.0f)
+            {
+                it->timeout = it->delay;
+                pnewfb = reinterpret_cast<Fireball*>(the_alives.allocate());
+                if (!pnewfb)
+                    // Контейнер переполнен
+                    continue;
+                tfball.position = it->position;
+                if (it->speed.x > 0.0f)
+                    tfball.position.x -= CELL_HW;
+                else
+                    tfball.position.y -= CELL_HW;
+                tfball.size = U_SIZE;
+                tfball.speed = it->speed;
+                *pnewfb = tfball;
+                the_sounds.push_back(seSHOT);
+            }
         }
     }
 }
@@ -292,9 +295,9 @@ void state_check()
     }
     for (UnitsList::iterator it = the_alives.begin(); it != the_alives.end(); ++it)
     {
-        if (*it == the_character)
+        if (&*it == the_character)
             continue;
-        if (the_character->is_collided(**it))
+        if (the_character->is_collided(*it))
         {
             the_state = gsLOSS;
             return;
@@ -305,9 +308,11 @@ void state_check()
 // Очистка всех списков
 void lists_clear()
 {
-    for (UnitsList::iterator it = the_alives.begin(); it != the_alives.end(); ++it)
-        delete *it;
-    the_alives.clear();
+    for (UnitsList::iterator it = the_alives.begin(); !the_alives.empty(); )
+    {
+        it->~Unit();
+        it = the_alives.erase(it);
+    }
     the_artillery.setting.clear();
     the_sounds.clear();
 }

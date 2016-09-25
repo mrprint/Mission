@@ -375,8 +375,8 @@ void Engine::field_draw()
     UnitOnScreen uos;
     for (UnitsList::iterator it = the_alives.begin(); it != the_alives.end(); ++it)
     {
-        uos.pos = (*it)->position;
-        uos.unit = *it;
+        uos.pos = it->position;
+        uos.unit = &*it;
         positions.push_back(uos);
     }
     std::sort(positions.begin(), positions.end()); // Сортируем по экранному y

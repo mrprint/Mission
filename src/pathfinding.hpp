@@ -38,8 +38,8 @@ protected:
         Attributes *pa;
         TCoords pos;
         AttrsPtr() {}
-        AttrsPtr(const TCoords& p, Attributes *attrs) { pos = p; pa = &(attrs[index2d(pos.x, pos.y)]); }
-        inline bool operator> (const AttrsPtr& r) const { return r.pa->fscore < pa->fscore; }
+        AttrsPtr(const TCoords& p, Attributes *attrs) { pos = p; pa = &attrs[index2d(pos.x, pos.y)]; }
+        bool operator> (const AttrsPtr& r) const { return r.pa->fscore < pa->fscore; }
     };
 
     std::priority_queue<AttrsPtr, std::vector<AttrsPtr>, std::greater<AttrsPtr> > opened;
@@ -104,7 +104,7 @@ protected:
                 {
                     if (t_gscore >= attrs[ni].gscore)
                         continue;
-                    rearrange(&(attrs[ni]), t_gscore + cost_estimate(npos, finish_p));
+                    rearrange(&attrs[ni], t_gscore + cost_estimate(npos, finish_p));
                 }
                 attrs[ni].ofsx = dx;
                 attrs[ni].ofsy = dy;
@@ -114,17 +114,17 @@ protected:
         return false;
     }
 
-    inline AttrsPtr opened_push(const TCoords& p)
+    AttrsPtr opened_push(const TCoords& p)
     {
         AttrsPtr a(p, attrs); opened.push(a); a.pa->state = st_Opened; return a;
     }
 
-    inline AttrsPtr opened_push(const TCoords& s, TWeight score)
+    AttrsPtr opened_push(const TCoords& s, TWeight score)
     {
         AttrsPtr a(s, attrs); a.pa->fscore = score; opened.push(a); a.pa->state = st_Opened; return a;
     }
 
-    inline AttrsPtr opened_pop()
+    AttrsPtr opened_pop()
     {
         AttrsPtr a = opened.top(); opened.pop(); a.pa->state = st_Closed; return a;
     }
@@ -168,18 +168,18 @@ protected:
         }
     }
 
-    static inline size_t index2d(size_t x, size_t y)
+    static size_t index2d(size_t x, size_t y)
     {
         return y * W + x;
     }
 
-    static inline TWeight cost_estimate(const TCoords& a, const TCoords& b)
+    static TWeight cost_estimate(const TCoords& a, const TCoords& b)
     {
         TCoords dt; dt.x = b.x - a.x; dt.y = b.y - a.y;
         return static_cast<TWeight>(10 * sqrt(dt.x * dt.x + dt.y * dt.y));
     }
 
-    static inline bool inbound(int x, int y)
+    static bool inbound(int x, int y)
     {
         return x >= 0 && x < static_cast<int>(W) && y >= 0 && y < static_cast<int>(H);
     }

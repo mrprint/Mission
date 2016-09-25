@@ -3,7 +3,10 @@
 #include <deque>
 #include <set>
 #include <vector>
+#include <algorithm>
+#include <cstring>
 #include "settings.hpp"
+#include "hfstorage.hpp"
 #include "pathfinding.hpp"
 #include "spaces.hpp"
 
@@ -92,14 +95,14 @@ public:
     Speed speed; // Скорость перемещения
 
     Unit();
-    Unit(const Unit&);
     virtual ~Unit() {} // Обеспечиваем полноценную деструкцию наследников
+    // Копирует всё, включая VMT (протокол произвольного хранения в памяти)
+    // Переопределяется для классов с расширенным набором полей данных
+    Unit& operator=(const Unit &unit) { memcpy(this, &unit, sizeof(Unit)); return *this; }
     virtual Type id() const { return utUnit; } // Получить тип юнита (RTTI не используем)
     bool is_collided(const Unit&) const; // Столкнулись ли с другим юнитом
     virtual void move(float); // Осуществляем ход
 };
-
-typedef std::vector<Unit*> UnitsList; // Группа юнитов
 
 // Главный герой
 class Character : public Unit
@@ -112,13 +115,21 @@ public:
         SpacePosition neigpos; // Пространственные координаты центра ближайшей ячейки
         Path path; // Список директив смены направления
         unsigned stage; // Этап на пути
+        // Протокол произвольного хранения в памяти
+        Target& operator=(const Target &target)
+        {
+            memcpy(this, &target, sizeof(Target));
+            memset(&path, 0, sizeof(Path));
+            path = target.path;
+            return *this;
+        }
     };
 
     Target way; // Набор характеристик пути к цели
     bool path_requested; // Обсчитывается путь
 
     Character();
-    Character(const Character&);
+    Character& operator=(const Character&); // Копирует всё, включая VMT (протокол произвольного хранения в памяти)
     virtual Type id() const { return utCharacter; }
     virtual void move(float);
     void set_speed(); // Устанавливает скорость
@@ -139,6 +150,8 @@ class Fireball : public Unit
 {
     virtual Type id() const { return utFireball; }
 };
+
+typedef HFStorage<Unit> UnitsList; // Группа юнитов
 
 ////////////////////////////////////////////////////////////////////////////////
 // Пушки
