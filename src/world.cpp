@@ -188,9 +188,9 @@ void Guard::move(float tdelta)
 {
     Unit::move(tdelta);
     DeskPosition dp = position;
-    if (the_field[dp].attribs.count(Cell::atrGUARDBACKW) > 0)
+    if (the_field[dp].attribs.test(Cell::atrGUARDBACKW))
         speed.x = -fabs(speed.x);
-    if (the_field[dp].attribs.count(Cell::atrGUARDFORW) > 0)
+    if (the_field[dp].attribs.test(Cell::atrGUARDFORW))
         speed.x = fabs(speed.x);
 }
 
@@ -203,10 +203,10 @@ void world_setup()
     // Размечаем поле
     for (int y = 0; y < WORLD_DIM; y++)
         for (int x = 0; x < WORLD_DIM; x++)
-            the_field(x, y).attribs.clear();
-    the_field(WORLD_DIM - 1, 0).attribs.insert(Cell::atrEXIT); // Позиция выхода
-    the_field(0, 2).attribs.insert(Cell::atrGUARDFORW); // Вешка направления движения охраны
-    the_field(WORLD_DIM - 1, 2).attribs.insert(Cell::atrGUARDBACKW); // Вешка направления движения охраны
+            the_field(x, y).attribs.reset();
+    the_field(WORLD_DIM - 1, 0).attribs.set(Cell::atrEXIT); // Позиция выхода
+    the_field(0, 2).attribs.set(Cell::atrGUARDFORW); // Вешка направления движения охраны
+    the_field(WORLD_DIM - 1, 2).attribs.set(Cell::atrGUARDBACKW); // Вешка направления движения охраны
     // Главный герой
     {
         Character tchar = Character();
@@ -289,7 +289,7 @@ void move_do(float tdelta)
 // Проверка состояния игры
 void state_check()
 {
-    if (the_field[the_character->position].attribs.count(Cell::atrEXIT) > 0)
+    if (the_field[the_character->position].attribs.test(Cell::atrEXIT))
     {
         the_state = gsWIN;
         return;

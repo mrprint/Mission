@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include <deque>
-#include <set>
+#include <bitset>
 #include <vector>
 #include <algorithm>
 #include <cstring>
@@ -41,13 +41,13 @@ public:
 
     // Какие-либо атрибуты клетки
     enum Attribute {
-        atrOBSTACLE, // "Препятствие"
+        atrOBSTACLE = 0, // "Препятствие"
         atrEXIT, // Зона выхода
         atrGUARDFORW, // Охране вперёд
         atrGUARDBACKW // Охране назад
     };
 
-    typedef std::set<Attribute> Attributes;
+    typedef std::bitset<4> Attributes;
 
     Attributes attribs;
 
@@ -70,7 +70,7 @@ public:
     Cell& operator[](DeskPosition i) { return cells[i.y][i.x]; }
     Cell& operator()(unsigned x, unsigned y) { return cells[y][x]; }
     // Интерфейсный метод для AStar
-    bool isobstacle(int x, int y) const { return cells[y][x].attribs.count(Cell::atrOBSTACLE) > 0; }
+    bool isobstacle(int x, int y) const { return cells[y][x].attribs.test(Cell::atrOBSTACLE); }
 };
 
 typedef std::vector<DeskPosition> Path; // Оптимальный путь между ячейками

@@ -351,9 +351,9 @@ void Engine::field_draw()
     for (int y = 0; y < WORLD_DIM; y++)
         for (int x = 0; x < WORLD_DIM; x++)
         {
-            if (the_field(x, y).attribs.count(Cell::atrOBSTACLE) == 0)
+            if (!the_field(x, y).attribs.test(Cell::atrOBSTACLE))
                 sprite_draw(&sprites[sprTILE].sprite, DeskPosition(x, y), sizes.spr_scale);
-            if (the_field(x, y).attribs.count(Cell::atrEXIT) > 0)
+            if (the_field(x, y).attribs.test(Cell::atrEXIT))
                 sprite_draw(&sprites[sprEXIT].sprite, DeskPosition(x, y), sizes.spr_scale);
         };
     // Рисуем стены
@@ -405,10 +405,10 @@ bool Engine::cell_flip(DeskPosition md)
     DeskPosition dp = the_character->position;
     if (md.x < 0 || md.x >= WORLD_DIM || md.y < 0 || md.y >= WORLD_DIM || (md.x == dp.x && md.y == dp.y))
         return false;
-    if (the_field[md].attribs.count(Cell::atrOBSTACLE) > 0)
-        the_field[md].attribs.erase(Cell::atrOBSTACLE);
+    if (the_field[md].attribs.test(Cell::atrOBSTACLE))
+        the_field[md].attribs.reset(Cell::atrOBSTACLE);
     else
-        the_field[md].attribs.insert(Cell::atrOBSTACLE);
+        the_field[md].attribs.set(Cell::atrOBSTACLE);
     return true;
 }
 
