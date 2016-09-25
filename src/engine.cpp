@@ -109,6 +109,7 @@ void Engine::videomode_set(bool _windowed)
         mode = sf::VideoMode(SCREEN_W, SCREEN_H);
         style = sf::Style::Titlebar | sf::Style::Close;
         window->create(mode, TITLE, style);
+        window->setFramerateLimit(60);
     }
     else
     {
