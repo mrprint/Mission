@@ -8,7 +8,7 @@
 
 template<
     size_t H, size_t W, // Размерность карты
-    typename TCoords, // Тип координат, предоставляющий члены "x" и "y". Со знаком.
+    typename TCoords, // Тип координат, предоставляющий члены "x" и "y". Со знаком
     typename TMap, // Карта. Предоставляет "isobstacle(x, y)"
     typename TWeight = int, // Тип веса
     typename TPath = std::vector<TCoords> // Возвращаемый путь, предоставляющий push_back

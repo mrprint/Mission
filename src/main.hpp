@@ -31,8 +31,10 @@ public:
     void flags_set(unsigned);
     void flags_clear(unsigned);
     bool flags_get(unsigned);
-    void path_find_request(const Field&, DeskPosition, DeskPosition); // Запрос на расчёт пути
-    const Path& path_read(); // Получение результата
+    // Запрос на расчёт пути
+    void path_find_request(const Field&, DeskPosition, DeskPosition);
+    // Получение результата
+    const Path& path_read();
 
 private:
 

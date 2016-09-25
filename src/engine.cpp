@@ -380,7 +380,7 @@ void Engine::field_draw()
         positions.push_back(uos);
     }
     std::sort(positions.begin(), positions.end()); // Сортируем по экранному y
-                                                   // Рисуем юниты от дальних к ближним
+    // Рисуем юниты от дальних к ближним
     for (ScreenPositions::iterator it = positions.begin(); it != positions.end(); ++it)
     {
         switch (it->unit->id()) {

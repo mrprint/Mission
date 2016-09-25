@@ -18,6 +18,7 @@ Character *the_character;
 SoundsQueue the_sounds;
 
 // Мелкие вспомогательные функции
+
 static inline int randint(int max = RAND_MAX)
 {
     return rand() % max;

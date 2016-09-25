@@ -95,13 +95,17 @@ public:
     Speed speed; // Скорость перемещения
 
     Unit();
-    virtual ~Unit() {} // Обеспечиваем полноценную деструкцию наследников
+    // Обеспечивает полноценную деструкцию наследников
+    virtual ~Unit() {}
     // Копирует всё, включая VMT (протокол произвольного хранения в памяти)
     // Переопределяется для классов с расширенным набором полей данных
     Unit& operator=(const Unit &unit) { memcpy(this, &unit, sizeof(Unit)); return *this; }
-    virtual Type id() const { return utUnit; } // Получить тип юнита (RTTI не используем)
-    bool is_collided(const Unit&) const; // Столкнулись ли с другим юнитом
-    virtual void move(float); // Осуществляем ход
+    // Получить тип юнита (RTTI не используем)
+    virtual Type id() const { return utUnit; }
+    // Столкнулись ли с другим юнитом
+    bool is_collided(const Unit&) const;
+    // Осуществляем ход
+    virtual void move(float);
 };
 
 // Главный герой
@@ -129,12 +133,16 @@ public:
     bool path_requested; // Обсчитывается путь
 
     Character();
-    Character& operator=(const Character&); // Копирует всё, включая VMT (протокол произвольного хранения в памяти)
+    // Копирует всё, включая VMT (протокол произвольного хранения в памяти)
+    Character& operator=(const Character&);
     virtual Type id() const { return utCharacter; }
     virtual void move(float);
-    void set_speed(); // Устанавливает скорость
-    void way_new_request(DeskPosition); // Запрос обсчета пути
-    void way_new_process(); // Обработка рассчитанного пути
+    // Устанавливает скорость
+    void set_speed();
+    // Запрос обсчета пути
+    void way_new_request(DeskPosition);
+    // Обработка рассчитанного пути
+    void way_new_process();
 };
 
 // Стражник
