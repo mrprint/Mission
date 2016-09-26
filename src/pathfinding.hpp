@@ -176,7 +176,7 @@ protected:
     static TWeight cost_estimate(const TCoords& a, const TCoords& b)
     {
         TCoords dt; dt.x = b.x - a.x; dt.y = b.y - a.y;
-        return static_cast<TWeight>(10 * sqrt(dt.x * dt.x + dt.y * dt.y));
+        return static_cast<TWeight>(10 * sqrt(static_cast<float>(dt.x * dt.x + dt.y * dt.y)));
     }
 
     static bool inbound(int x, int y)
