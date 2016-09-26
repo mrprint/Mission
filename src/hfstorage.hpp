@@ -4,7 +4,7 @@
 #include <limits>
 #include <assert.h>
 
-#ifdef _DEBUG
+#ifdef DEBUG
 #include <cstring>
 #endif
 
@@ -47,7 +47,7 @@ public:
         el_size = block_size_get(_el_size + sizeof(T) * 2, 1);
         data_sz = el_size * amount;
         storage = new char[data_sz];
-#ifdef _DEBUG
+#ifdef DEBUG
         memset(storage, 0, data_sz);
 #endif
         for (T i = 0; i < amount; ++i)
@@ -93,7 +93,7 @@ public:
         {
             --count;
             relink(ind, free, used);
-#ifdef _DEBUG
+#ifdef DEBUG
             memset(ptr_to(ind), 0, el_size - sizeof(T) * 2);
 #endif
         }
