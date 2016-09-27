@@ -4,7 +4,6 @@
 #include <bitset>
 #include <vector>
 #include <algorithm>
-#include <cstring>
 #include "settings.hpp"
 #include "hfstorage.hpp"
 #include "pathfinding.hpp"
@@ -97,9 +96,6 @@ public:
     Unit();
     // Обеспечивает полноценную деструкцию наследников
     virtual ~Unit() {}
-    // Копирует всё, включая указатель на VMT (протокол произвольного хранения в памяти)
-    // Переопределяется для классов с расширенным набором полей данных
-    Unit& operator=(const Unit &unit) { memcpy(this, &unit, sizeof(Unit)); return *this; }
     // Получить тип юнита (RTTI не используем)
     virtual Type id() const { return utUnit; }
     // Столкнулись ли с другим юнитом
@@ -119,22 +115,12 @@ public:
         SpacePosition neigpos; // Пространственные координаты центра ближайшей ячейки
         Path path; // Список директив смены направления
         unsigned stage; // Этап на пути
-        // Протокол произвольного хранения в памяти
-        Target& operator=(const Target &target)
-        {
-            memcpy(this, &target, sizeof(Target));
-            memset(&path, 0, sizeof(Path));
-            path = target.path;
-            return *this;
-        }
     };
 
     Target way; // Набор характеристик пути к цели
     bool path_requested; // Обсчитывается путь
 
     Character();
-    // Копирует всё, включая VMT (протокол произвольного хранения в памяти)
-    Character& operator=(const Character&);
     virtual Type id() const { return utCharacter; }
     virtual void move(float);
     // Устанавливает скорость

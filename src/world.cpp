@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <limits>
 #include <cstdlib>
+#include <new>
 #include "world.hpp"
 #include "spaces.hpp"
 #include "pathfinding.hpp"
@@ -104,14 +105,6 @@ Character::Character() : Unit()
     way.target = 0;
 }
 
-Character& Character::operator=(const Character &character)
-{
-    this->Unit::operator=(character);
-    way = character.way;
-    path_requested = character.path_requested;
-    return *this;
-}
-
 void Character::move(float tdelta)
 {
     if (the_state == gsINPROGRESS)
@@ -207,22 +200,22 @@ void world_setup()
     the_field(WORLD_DIM - 1, 0).attribs.set(Cell::atrEXIT); // Позиция выхода
     the_field(0, 2).attribs.set(Cell::atrGUARDFORW); // Вешка направления движения охраны
     the_field(WORLD_DIM - 1, 2).attribs.set(Cell::atrGUARDBACKW); // Вешка направления движения охраны
-    // Главный герой
+                                                                  // Главный герой
     {
-        Character tchar = Character();
         the_character = reinterpret_cast<Character*>(the_alives.allocate());
-        *the_character = tchar;
+        new (the_character) Character();
         the_character->position = DeskPosition(0, WORLD_DIM - 1);
         the_character->way.target = DeskPosition(0, WORLD_DIM - 1);
         the_character->set_speed();
     }
     // Стража
     {
-        Guard tgrd = Guard();
-        tgrd.position = DeskPosition(0, 2);
-        tgrd.size = U_SIZE * 1.5f;
-        tgrd.speed = Speed(GUARD_B_SPEED, 0.0f);
-        *reinterpret_cast<Guard*>(the_alives.allocate()) = tgrd;
+        Guard *pgrd;
+        pgrd = reinterpret_cast<Guard*>(the_alives.allocate());
+        new (pgrd) Guard();
+        pgrd->position = DeskPosition(0, 2);
+        pgrd->size = U_SIZE * 1.5f;
+        pgrd->speed = Speed(GUARD_B_SPEED, 0.0f);
     }
     // Артиллерия
     Artillery::Settings apositions(WORLD_DIM * 2 - 2);
@@ -261,7 +254,7 @@ void move_do(float tdelta)
     }
     // Генерируем новые выстрелы
     {
-        Fireball *pnewfb, tfball = Fireball();
+        Fireball *pnewfb;
         for (Artillery::Settings::iterator it = the_artillery.setting.begin(); it != the_artillery.setting.end(); ++it)
         {
             it->timeout -= tdelta;
@@ -272,14 +265,14 @@ void move_do(float tdelta)
                 if (!pnewfb)
                     // Контейнер переполнен
                     continue;
-                tfball.position = it->position;
+                new (pnewfb) Fireball();
+                pnewfb->position = it->position;
                 if (it->speed.x > 0.0f)
-                    tfball.position.x -= CELL_HW;
+                    pnewfb->position.x -= CELL_HW;
                 else
-                    tfball.position.y -= CELL_HW;
-                tfball.size = U_SIZE;
-                tfball.speed = it->speed;
-                *pnewfb = tfball;
+                    pnewfb->position.y -= CELL_HW;
+                pnewfb->size = U_SIZE;
+                pnewfb->speed = it->speed;
                 the_sounds.push_back(seSHOT);
             }
         }
