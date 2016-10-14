@@ -3,7 +3,7 @@
 #include "engine.hpp"
 #include "spaces.hpp"
 
-static const float SK45 = 0.7071067812f;
+static const float SC45 = 0.7071067812f;
 static const float HYP2 = 2.828427125f;
 
 SpacePosition& SpacePosition::operator=(const DeskPosition& val)
@@ -19,7 +19,7 @@ SpacePosition& SpacePosition::operator=(const ScreenPosition& val)
     *this = (
         (SpacePosition(val.x, val.y) * HYP2 * 2.0f - room * HYP2 
          - SpacePosition(the_engine.sizes.lc_ofst, the_engine.sizes.tc_ofst) * HYP2 * 2.0f) / (room * 2.0f)
-        ).rotate(SpacePosition(SK45, -SK45));
+        ).rotate(SpacePosition(SC45, -SC45));
     return *this;
 }
 
@@ -34,7 +34,7 @@ DeskPosition& DeskPosition::operator=(const SpacePosition& val)
 ScreenPosition& ScreenPosition::operator=(const SpacePosition& val)
 {
     SpacePosition t = 
-        SpacePosition(the_engine.sizes.lc_ofst, the_engine.sizes.tc_ofst) + (val.rotate(SK45) + HYP2 / 2.0f) 
+        SpacePosition(the_engine.sizes.lc_ofst, the_engine.sizes.tc_ofst) + (val.rotate(SC45) + HYP2 / 2.0f) 
         * SpacePosition(the_engine.sizes.room_w, the_engine.sizes.room_h) / HYP2;
     x = t.x; y = t.y;
     return *this;

@@ -200,7 +200,7 @@ void world_setup()
     the_field(WORLD_DIM - 1, 0).attribs.set(Cell::atrEXIT); // Позиция выхода
     the_field(0, 2).attribs.set(Cell::atrGUARDFORW); // Вешка направления движения охраны
     the_field(WORLD_DIM - 1, 2).attribs.set(Cell::atrGUARDBACKW); // Вешка направления движения охраны
-                                                                  // Главный герой
+    // Главный герой
     {
         the_character = reinterpret_cast<Character*>(the_alives.allocate());
         new (the_character) Character();
