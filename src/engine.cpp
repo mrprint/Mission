@@ -18,6 +18,7 @@ static const float BKG_SIZE = 1024.0f;
 static const float SPR_SIZE = 128.0f;
 static const float TILE_HOT = SPR_SIZE * 0.75f;
 static const unsigned TEXT_COLOR = 0xFF0010FF;
+static const int TEXT_CHR_SIZE = 24;
 static const char *RES_DIR = "resources/";
 
 enum TextureIndexes {
@@ -446,7 +447,7 @@ void Engine::text_print(const ScreenPosition &pos, unsigned color, const char* s
 {
     sf::Text text;
     text.setFont(font);
-    text.setCharacterSize(24);
+    text.setCharacterSize(TEXT_CHR_SIZE);
     text.setColor(sf::Color(color));
     text.setString(str);
     if (centered)

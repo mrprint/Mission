@@ -43,10 +43,11 @@ public:
         atrOBSTACLE = 0, // "Препятствие"
         atrEXIT, // Зона выхода
         atrGUARDFORW, // Охране вперёд
-        atrGUARDBACKW // Охране назад
+        atrGUARDBACKW, // Охране назад
+        _atrEND
     };
 
-    typedef std::bitset<4> Attributes;
+    typedef std::bitset<_atrEND> Attributes;
 
     Attributes attribs;
 
