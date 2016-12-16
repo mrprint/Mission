@@ -16,7 +16,7 @@ enum {
 };
 
 // Точка в двумерном пространстве
-template <class T, int _class=icSPACE>
+template <typename T, int _class=icSPACE>
 struct Vector2D
 {
     typedef T basetype;

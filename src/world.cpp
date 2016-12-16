@@ -40,7 +40,7 @@ static inline float deviation_apply(float val, float dev)
     return (2 * dev * randomf() - dev + 1) * val;
 }
 
-template<class T>
+template<typename T>
 static inline T round(T number)
 {
     return number < static_cast<T>(0.0) ? ceil(number - static_cast<T>(0.5)) : floor(number + static_cast<T>(0.5));

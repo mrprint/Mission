@@ -497,6 +497,30 @@ bool SpriteInfo::init()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+AnimationSequence::AnimationSequence(float _length) : length(_length)
+{
+    node = sequence.front().time == 0.0 ? sequence.begin() : --sequence.end();
+}
+
+void AnimationSequence::advance(float tdelta)
+{
+    Sequence::iterator noden;
+    float t = time + tdelta;
+    time = t > length ? t - length : t;
+    for (
+        noden = node;
+        node->time * length > time && noden->time * length > time || noden->time * length < time;
+        (node = noden), noden = (++noden != sequence.end()) ? noden : sequence.begin()
+        );
+}
+
+SpriteInfo* AnimationSequence::sprite_get() const
+{
+    return node->pic;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 bool SoundInfo::init()
 {
     if (!buffer.loadFromFile(std::string(RES_DIR) + source))

@@ -31,7 +31,7 @@ public:
 };
 
 // Хранилище с параметризованным типом индекса
-template <class T>
+template <typename T>
 class HFStorageParamI : public HFStorageAbstract
 {
     char *storage;
@@ -231,7 +231,7 @@ public:
 };
 
 // Основной тип хранилища, параметризованный по типу хранящихся элементов
-template <class T>
+template <typename T>
 class HFStorage
 {
 public:

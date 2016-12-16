@@ -32,6 +32,28 @@ struct SpriteInfo {
     bool init();
 };
 
+// Анимация
+struct AnimationSequence {
+
+    struct Node {
+        SpriteInfo *pic;
+        float time;
+    };
+
+    typedef std::vector<Node> Sequence;
+
+    float length; // длина анимации
+    float time; // текущий момент времени
+    Sequence sequence;
+    Sequence::iterator node; // текущий узел
+
+    AnimationSequence(float);
+    void advance(float);
+    void time_set(float _time) { advance(time - floor(_time / length) * length); };
+    SpriteInfo* sprite_get() const;
+};
+
+
 // Вся информация о звуке и его инициализации
 struct SoundInfo {
     const char *source;
