@@ -123,7 +123,7 @@ public:
 
     Character();
     virtual Type id() const { return utCharacter; }
-    virtual void move(float);
+    virtual void move(float) override;
     // Устанавливает скорость
     void set_speed();
     // Запрос обсчета пути
@@ -137,7 +137,7 @@ class Guard : public Unit
 {
 public:
     virtual Type id() const { return utGuard; }
-    virtual void move(float);
+    virtual void move(float) override;
 };
 
 // Выстрел

@@ -1,7 +1,10 @@
 ﻿#pragma once
 
 #include <string>
-#include <SFML/System.hpp>
+#include <thread>
+#include <mutex>
+#include <atomic>
+#include <condition_variable>
 #include "world.hpp"
 #include "pathfinding.hpp"
 #include "spaces.hpp"
@@ -9,9 +12,10 @@
 // Вспомогательный поток расчета пути
 class Coworker
 {
-    volatile unsigned flags;
-    sf::Mutex mutex;
-    sf::Thread thread;
+    std::atomic<unsigned> flags;
+    std::mutex mp_mutex;
+    std::condition_variable start_cond;
+    std::thread w_thread;
 
     const Field *field;
     DeskPosition start_p, finish_p;
@@ -25,16 +29,16 @@ public:
         cwDONE = 4,
     };
 
-    Coworker() : flags(cwREADY), thread(&Coworker::body, this), field(NULL) {}
+    Coworker() : field(nullptr) { flags.store(cwREADY); }
     void start();
     void stop();
-    void flags_set(unsigned);
-    void flags_clear(unsigned);
-    bool flags_get(unsigned);
+    void flags_set(unsigned _flags) { flags.fetch_or(_flags); }
+    void flags_clear(unsigned _flags) { flags.fetch_and(~_flags); }
+    bool flags_get(unsigned _flags) { return (flags.load() & _flags) == _flags; }
     // Запрос на расчёт пути
     void path_find_request(const Field&, DeskPosition, DeskPosition);
     // Получение результата
-    const Path& path_read();
+    const Path& path_read() const;
 
 private:
 

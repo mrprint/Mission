@@ -1,13 +1,14 @@
 ﻿#include "settings.hpp"
 #include <string>
-#include <time.h>
-#include <SFML/System.hpp>
+#include <thread>
+#include <mutex>
+#include <chrono>
 #include "main.hpp"
 #include "engine.hpp"
 #include "world.hpp"
 #include "pathfinding.hpp"
 
-static const int POLL_GRANULARITY = 1000 / 240; // Четверть 60Гц кадра
+using namespace std;
 
 Coworker the_coworker;
 
@@ -17,38 +18,17 @@ static FieldsAStar a_star;
 
 void Coworker::start()
 {
-    thread.launch();
+    w_thread = thread{ &Coworker::body, this };
 }
 
 void Coworker::stop()
 {
-    flags_set(cwSTART | cwDONE);
-    thread.wait();
-}
-
-// Работу с флагами лучше было бы сделать на атомарных операциях, но испоьлзован более универсальный способ
-
-void Coworker::flags_set(unsigned _flags)
-{
-    mutex.lock();
-    flags |= _flags;
-    mutex.unlock();
-}
-
-void Coworker::flags_clear(unsigned _flags)
-{
-    mutex.lock();
-    flags &= ~_flags;
-    mutex.unlock();
-}
-
-bool Coworker::flags_get(unsigned _flags)
-{
-    bool result;
-    mutex.lock();
-    result = (flags & _flags) == _flags;
-    mutex.unlock();
-    return result;
+    {
+        unique_lock<mutex> lck(mp_mutex);
+        flags_set(cwSTART | cwDONE);
+        start_cond.notify_one();
+    }
+    w_thread.join();
 }
 
 void Coworker::path_find_request(const Field &_field, DeskPosition st, DeskPosition fn)
@@ -60,10 +40,14 @@ void Coworker::path_find_request(const Field &_field, DeskPosition st, DeskPosit
         finish_p = fn;
         flags_clear(cwREADY);
     }
-    flags_set(cwSTART);
+    {
+        unique_lock<mutex> lck(mp_mutex);
+        flags_set(cwSTART);
+        start_cond.notify_one();
+    }
 }
 
-const Path& Coworker::path_read()
+const Path& Coworker::path_read() const
 {
     return path;
 }
@@ -86,23 +70,15 @@ void Coworker::body()
 
 void Coworker::start_wait()
 {
-    for (bool done = false; !done; sf::sleep(sf::microseconds(POLL_GRANULARITY)))
-    {
-        mutex.lock();
-        if (flags & static_cast<unsigned>(cwSTART))
-        {
-            flags &= ~static_cast<unsigned>(cwSTART);
-            done = true;
-        }
-        mutex.unlock();
-    }
+    unique_lock<mutex> lck(mp_mutex);
+    while (!flags_get(cwSTART)) start_cond.wait(lck);
+    flags_clear(cwSTART);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 int main()
 {
-    srand(static_cast<unsigned>(time(NULL)));
     the_coworker.start();
     the_state = gsINPROGRESS;
     level = 0;

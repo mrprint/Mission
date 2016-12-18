@@ -1,10 +1,10 @@
 ﻿#include "settings.hpp"
-#include <math.h>
+#include <cmath>
 #include "engine.hpp"
 #include "spaces.hpp"
 
-static const float SC45 = 0.7071067812f;
-static const float HYP2 = 2.828427125f;
+constexpr auto SC45 = 0.7071067812f;
+constexpr auto HYP2 = 2.828427125f;
 
 SpacePosition& SpacePosition::operator=(const DeskPosition& val)
 {

@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include <string.h>
-#include <math.h>
+#include <cmath>
 #include <functional>
 #include <vector>
 #include <queue>
@@ -85,14 +85,14 @@ protected:
                 return true;
             for (int i = 0; i < 8; ++i)
             {
-                int dx = dirs[i].x;
-                int dy = dirs[i].y;
+                auto dx = dirs[i].x;
+                auto dy = dirs[i].y;
                 TCoords npos;
                 npos.x = current.pos.x + dx;
                 npos.y = current.pos.y + dy;
                 if (!inbound(npos.x, npos.y) || map.isobstacle(npos.x, npos.y))
                     continue;
-                size_t ni = index2d(npos.x, npos.y);
+                auto ni = index2d(npos.x, npos.y);
                 if (attrs[ni].state == st_Closed)
                     continue;
                 TWeight t_gscore = current.pa->gscore + dirs[i].d;

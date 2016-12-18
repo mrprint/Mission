@@ -1,7 +1,7 @@
 ﻿#include "settings.hpp"
 #include <limits>
-#include <stdio.h>
-#include <math.h>
+#include <cmath>
+#include <string>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include "engine.hpp"
@@ -9,17 +9,14 @@
 #include "world.hpp"
 #include "main.hpp"
 
+using namespace std;
 
-#if _MSC_VER && (_MSC_VER < 1800) && !__INTEL_COMPILER
-#define snprintf(buff, sz, str, ...) sprintf(buff, str, __VA_ARGS__)
-#endif
-
-static const float BKG_SIZE = 1024.0f;
-static const float SPR_SIZE = 128.0f;
-static const float TILE_HOT = SPR_SIZE * 0.75f;
-static const unsigned TEXT_COLOR = 0xFF0010FF;
-static const int TEXT_CHR_SIZE = 24;
-static const char *RES_DIR = "resources/";
+constexpr static auto BKG_SIZE = 1024.0f;
+constexpr static auto SPR_SIZE = 128.0f;
+constexpr static auto TILE_HOT = SPR_SIZE * 0.75f;
+constexpr static auto TEXT_COLOR = 0xFF0010FF;
+constexpr static auto TEXT_CHR_SIZE = 24;
+constexpr static auto RES_DIR = "resources/";
 
 enum TextureIndexes {
     txtBKG = 0, txtSPR, _txtEND
@@ -39,7 +36,7 @@ struct UnitOnScreen {
     bool operator<(const UnitOnScreen &u) { return (pos.y < u.pos.y); }
 };
 
-typedef std::vector<UnitOnScreen> ScreenPositions; // Список расположения юнитов
+typedef vector<UnitOnScreen> ScreenPositions; // Список расположения юнитов
 
 Engine the_engine; // Экземпляр движка
 
@@ -48,23 +45,22 @@ Engine::Engine()
 {
     window = new sf::RenderWindow();
     banner_timeout = 0.0f;
-    textures.push_back(TextureInfo("skybkg.png"));
-    textures.push_back(TextureInfo("sprites.png"));
-    sprites.push_back(SpriteInfo(textures[txtBKG], 0, 0, 1024, 1024, 0, 0, BKG_SIZE / 2, BKG_SIZE / 2));
-    sprites.push_back(SpriteInfo(textures[txtSPR], 130, 0, 128, 64, 0, 64, SPR_SIZE / 2, TILE_HOT));
-    sprites.push_back(SpriteInfo(textures[txtSPR], 380, 77, 63, 96, 0, 0, SPR_SIZE / 2, TILE_HOT));
-    sprites.push_back(SpriteInfo(textures[txtSPR], 445, 77, 65, 97, 63, 0, SPR_SIZE / 2, TILE_HOT));
-    sprites.push_back(SpriteInfo(textures[txtSPR], 232, 66, 24, 47, 20, 25, SPR_SIZE / 2, TILE_HOT));
-    sprites.push_back(SpriteInfo(textures[txtSPR], 468, 0, 23, 50, 82, 22, SPR_SIZE / 2, TILE_HOT));
-    sprites.push_back(SpriteInfo(textures[txtSPR], 0, 0, 128, 128, 0, 0, SPR_SIZE / 2, SPR_SIZE));
-    sprites.push_back(SpriteInfo(textures[txtSPR], 0, 130, 66, 35, 29, 77, SPR_SIZE / 2, TILE_HOT));
-    sprites.push_back(SpriteInfo(textures[txtSPR], 130, 66, 100, 72, 11, 47, SPR_SIZE / 2, TILE_HOT));
-    sprites.push_back(SpriteInfo(textures[txtSPR], 364, 0, 102, 75, 18, 44, SPR_SIZE / 2, TILE_HOT));
-    sprites.push_back(SpriteInfo(textures[txtSPR], 290, 109, 88, 91, 19, 16, SPR_SIZE / 2, TILE_HOT));
-    sprites.push_back(SpriteInfo(textures[txtSPR], 260, 0, 102, 107, 5, 0, SPR_SIZE / 2, TILE_HOT));
-    sounds.push_back("shot.wav");
-    sounds.push_back("hit.wav");
-    sounds.push_back("gong.wav");
+    textures = { "skybkg.png", "sprites.png" };
+    sprites = {
+        {textures[txtBKG], 0, 0, 1024, 1024, 0, 0, BKG_SIZE / 2, BKG_SIZE / 2},
+        {textures[txtSPR], 130, 0, 128, 64, 0, 64, SPR_SIZE / 2, TILE_HOT},
+        {textures[txtSPR], 380, 77, 63, 96, 0, 0, SPR_SIZE / 2, TILE_HOT},
+        {textures[txtSPR], 445, 77, 65, 97, 63, 0, SPR_SIZE / 2, TILE_HOT },
+        {textures[txtSPR], 232, 66, 24, 47, 20, 25, SPR_SIZE / 2, TILE_HOT },
+        {textures[txtSPR], 468, 0, 23, 50, 82, 22, SPR_SIZE / 2, TILE_HOT },
+        {textures[txtSPR], 0, 0, 128, 128, 0, 0, SPR_SIZE / 2, SPR_SIZE },
+        {textures[txtSPR], 0, 130, 66, 35, 29, 77, SPR_SIZE / 2, TILE_HOT },
+        {textures[txtSPR], 130, 66, 100, 72, 11, 47, SPR_SIZE / 2, TILE_HOT },
+        {textures[txtSPR], 364, 0, 102, 75, 18, 44, SPR_SIZE / 2, TILE_HOT },
+        {textures[txtSPR], 290, 109, 88, 91, 19, 16, SPR_SIZE / 2, TILE_HOT },
+        {textures[txtSPR], 260, 0, 102, 107, 5, 0, SPR_SIZE / 2, TILE_HOT }
+    };
+    sounds = { "shot.wav", "hit.wav", "gong.wav" };
     windowed = true;
 }
 
@@ -80,22 +76,22 @@ bool Engine::init()
     if (!(window && window->isOpen()))
         return false;
 
-    for (int i = txtBKG; i < _txtEND; ++i)
+    for (auto &texture : textures)
     {
-        if (!textures[i].init())
+        if (!texture.init())
             return false;
     }
-    for (int i = sprBKG; i < _sprEND; ++i)
+    for (auto &sprite : sprites)
     {
-        if (!sprites[i].init())
+        if (!sprite.init())
             return false;
     }
-    for (int i = sndSHOT; i < _sndEND; ++i)
+    for (auto &sound : sounds)
     {
-        if (!sounds[i].init())
+        if (!sound.init())
             return false;
     }
-    if (!font.loadFromFile(std::string(RES_DIR) + "Orbitron Medium.ttf"))
+    if (!font.loadFromFile(string(RES_DIR) + "Orbitron Medium.ttf"))
         return false;
 
     return true;
@@ -104,19 +100,16 @@ bool Engine::init()
 void Engine::videomode_set(bool _windowed)
 {
     sf::VideoMode mode;
-    unsigned style;
     if (_windowed)
     {
         mode = sf::VideoMode(SCREEN_W, SCREEN_H);
-        style = sf::Style::Titlebar | sf::Style::Close;
-        window->create(mode, TITLE, style);
+        window->create(mode, TITLE, sf::Style::Titlebar | sf::Style::Close);
         window->setFramerateLimit(60);
     }
     else
     {
         mode = sf::VideoMode::getDesktopMode();
-        style = sf::Style::Fullscreen;
-        window->create(mode, TITLE, style);
+        window->create(mode, TITLE, sf::Style::Fullscreen);
         window->setVerticalSyncEnabled(true);
         // Обход SFML's bug #921
         window->setView(sf::View(
@@ -127,10 +120,10 @@ void Engine::videomode_set(bool _windowed)
     sizes.screen_w = mode.width;
     sizes.screen_h = mode.height;
 
-    int tile_w = (sizes.screen_w - (_LC_OFST * 2)) / WORLD_DIM - ((sizes.screen_w - (_LC_OFST * 2)) / WORLD_DIM) % 2;
-    int tile_h = tile_w / 2;
-    int tile_hw = tile_w / 2;
-    int tile_hh = tile_h / 2 + (tile_h / 2) % 2;
+    auto tile_w = (sizes.screen_w - (_LC_OFST * 2)) / WORLD_DIM - ((sizes.screen_w - (_LC_OFST * 2)) / WORLD_DIM) % 2;
+    auto tile_h = tile_w / 2;
+    auto tile_hw = tile_w / 2;
+    auto tile_hh = tile_h / 2 + (tile_h / 2) % 2;
     sizes.room_w = tile_w * WORLD_DIM;
     sizes.room_h = tile_h * WORLD_DIM;
     sizes.lc_ofst = (sizes.screen_w - sizes.room_w) / 2;
@@ -141,19 +134,16 @@ void Engine::videomode_set(bool _windowed)
 
 void Engine::frame_render()
 {
-    char buffer[32];
-
     if (!window->isOpen())
         return;
-    sprite_draw(&sprites[sprBKG].sprite, ScreenPosition(sizes.screen_w, sizes.screen_h) / 2.0f, sizes.bkg_scale);
+    sprite_draw(sprites[sprBKG].sprite, ScreenPosition(sizes.screen_w, sizes.screen_h) / 2.0f, sizes.bkg_scale);
 
     field_draw();
     // Отображаем игровую информацию
-    snprintf(buffer, sizeof(buffer), "Level %d", level + 1);
     text_print(
         ScreenPosition(static_cast<float>(sizes.lc_ofst)),
         TEXT_COLOR,
-        reinterpret_cast<char*>(&buffer)
+        string("Level ") + to_string(level + 1)
     );
     switch (the_state)
     {
@@ -209,10 +199,10 @@ void Engine::input_process()
             switch (evt.mouseButton.button)
             {
             case sf::Mouse::Left:
-                controls.insert(csLMBUTTON);
+                controls.set(csLMBUTTON);
                 break;
             case sf::Mouse::Right:
-                controls.insert(csRMBUTTON);
+                controls.set(csRMBUTTON);
                 break;
             }
             break;
@@ -221,10 +211,10 @@ void Engine::input_process()
             switch (evt.mouseButton.button)
             {
             case sf::Mouse::Left:
-                controls.erase(csLMBUTTON);
+                controls.reset(csLMBUTTON);
                 break;
             case sf::Mouse::Right:
-                controls.erase(csRMBUTTON);
+                controls.reset(csRMBUTTON);
                 break;
             }
             break;
@@ -244,7 +234,7 @@ void Engine::update(sf::Time tdelta)
 
     if (!window->isOpen())
         return;
-    float dt = tdelta.asSeconds();
+    auto dt = tdelta.asSeconds();
     if (dt > MAX_TIME_FRACT)
         dt = MAX_TIME_FRACT; // Замедляем время, если машина не успевает считать
 
@@ -283,7 +273,7 @@ void Engine::update(sf::Time tdelta)
         state_check(); // Оцениваем состояние игры
     }
 
-    if (controls.count(csLMBUTTON) && the_state == gsINPROGRESS)
+    if (controls.test(csLMBUTTON) && the_state == gsINPROGRESS)
     {
         if (!the_character->path_requested && the_coworker.flags_get(Coworker::cwREADY) && !lb_down)
         {
@@ -294,7 +284,7 @@ void Engine::update(sf::Time tdelta)
     }
     else
         lb_down = false;
-    if (controls.count(csRMBUTTON) && the_state == gsINPROGRESS)
+    if (controls.test(csRMBUTTON) && the_state == gsINPROGRESS)
     {
 
         if (!the_character->path_requested && the_coworker.flags_get(Coworker::cwREADY) && !rb_down)
@@ -339,11 +329,11 @@ void Engine::work_do()
     main_loop();
 }
 
-void Engine::sprite_draw(sf::Sprite *spr, const ScreenPosition &pos, float scale)
+void Engine::sprite_draw(sf::Sprite &spr, const ScreenPosition &pos, float scale)
 {
-    spr->setPosition(pos);
-    spr->setScale(scale, scale);
-    window->draw(*spr);
+    spr.setPosition(pos);
+    spr.setScale(scale, scale);
+    window->draw(spr);
 }
 
 // Отрисовка игрового поля
@@ -354,49 +344,46 @@ void Engine::field_draw()
         for (int x = 0; x < WORLD_DIM; x++)
         {
             if (!the_field(x, y).attribs.test(Cell::atrOBSTACLE))
-                sprite_draw(&sprites[sprTILE].sprite, DeskPosition(x, y), sizes.spr_scale);
+                sprite_draw(sprites[sprTILE].sprite, DeskPosition(x, y), sizes.spr_scale);
             if (the_field(x, y).attribs.test(Cell::atrEXIT))
-                sprite_draw(&sprites[sprEXIT].sprite, DeskPosition(x, y), sizes.spr_scale);
+                sprite_draw(sprites[sprEXIT].sprite, DeskPosition(x, y), sizes.spr_scale);
         };
     // Рисуем стены
     for (int i = 0; i < WORLD_DIM; i++)
     {
-        sprite_draw(&sprites[sprRWALL].sprite, DeskPosition(i, 0), sizes.spr_scale);
-        sprite_draw(&sprites[sprLWALL].sprite, DeskPosition(0, i), sizes.spr_scale);
+        sprite_draw(sprites[sprRWALL].sprite, DeskPosition(i, 0), sizes.spr_scale);
+        sprite_draw(sprites[sprLWALL].sprite, DeskPosition(0, i), sizes.spr_scale);
     }
     // Рисуем пушки
-    for (Artillery::Settings::iterator it = the_artillery.setting.begin(); it != the_artillery.setting.end(); ++it)
+    for (auto &setting : the_artillery.setting)
     {
-        if (fabs(it->speed.x) < std::numeric_limits<float>::epsilon())
-            sprite_draw(&sprites[sprRBATT].sprite, it->position, sizes.spr_scale);
+        if (abs(setting.speed.x) < numeric_limits<float>::epsilon())
+            sprite_draw(sprites[sprRBATT].sprite, setting.position, sizes.spr_scale);
         else
-            sprite_draw(&sprites[sprLBATT].sprite, it->position, sizes.spr_scale);
+            sprite_draw(sprites[sprLBATT].sprite, setting.position, sizes.spr_scale);
     }
     // Заполняем список юнитов с их экранными координатами
     ScreenPositions positions;
-    UnitOnScreen uos;
-    for (UnitsList::iterator it = the_alives.begin(); it != the_alives.end(); ++it)
+    for (auto &alive : the_alives)
     {
-        uos.pos = it->position;
-        uos.unit = &*it;
-        positions.push_back(uos);
+        positions.emplace_back(UnitOnScreen{ alive.position , &alive });
     }
-    std::sort(positions.begin(), positions.end()); // Сортируем по экранному y
+    sort(positions.begin(), positions.end()); // Сортируем по экранному y
     // Рисуем юниты от дальних к ближним
-    for (ScreenPositions::iterator it = positions.begin(); it != positions.end(); ++it)
+    for (auto &spos : positions)
     {
-        switch (it->unit->id()) {
+        switch (spos.unit->id()) {
         case Unit::utCharacter:
             if (the_character->path_requested)
-                sprite_draw(&sprites[sprCHART].sprite, it->pos, sizes.spr_scale);
+                sprite_draw(sprites[sprCHART].sprite, spos.pos, sizes.spr_scale);
             else
-                sprite_draw(&sprites[sprCHAR].sprite, it->pos, sizes.spr_scale);
+                sprite_draw(sprites[sprCHAR].sprite, spos.pos, sizes.spr_scale);
             break;
         case Unit::utFireball:
-            sprite_draw(&sprites[sprFBALL].sprite, it->pos, sizes.spr_scale * 0.5f);
+            sprite_draw(sprites[sprFBALL].sprite, spos.pos, sizes.spr_scale * 0.5f);
             break;
         case Unit::utGuard:
-            sprite_draw(&sprites[it->unit->speed.x >= 0.0f ? sprRGUARD : sprLGUARD].sprite, it->pos, sizes.spr_scale);
+            sprite_draw(sprites[spos.unit->speed.x >= 0.0f ? sprRGUARD : sprLGUARD].sprite, spos.pos, sizes.spr_scale);
         }
     }
 }
@@ -404,7 +391,7 @@ void Engine::field_draw()
 // Изменение состояния указанной мышкой ячейки
 bool Engine::cell_flip(DeskPosition md)
 {
-    DeskPosition dp = the_character->position;
+    auto dp = the_character->position;
     if (md.x < 0 || md.x >= WORLD_DIM || md.y < 0 || md.y >= WORLD_DIM || (md.x == dp.x && md.y == dp.y))
         return false;
     if (the_field[md].attribs.test(Cell::atrOBSTACLE))
@@ -443,7 +430,7 @@ void Engine::sounds_play()
     }
 }
 
-void Engine::text_print(const ScreenPosition &pos, unsigned color, const char* str, bool centered)
+void Engine::text_print(const ScreenPosition &pos, unsigned color, const string& str, bool centered)
 {
     sf::Text text;
     text.setFont(font);
@@ -452,7 +439,7 @@ void Engine::text_print(const ScreenPosition &pos, unsigned color, const char* s
     text.setString(str);
     if (centered)
     {
-        sf::FloatRect bounds = text.getLocalBounds();
+        auto bounds = text.getLocalBounds();
         text.setOrigin(bounds.width / 2.0f, bounds.height / 2.0f);
     }
     else
@@ -464,11 +451,9 @@ void Engine::text_print(const ScreenPosition &pos, unsigned color, const char* s
 ////////////////////////////////////////////////////////////////////////////////
 void Orchestre::play(const sf::SoundBuffer& buffer)
 {
-    sf::Sound s_entity;
     if (sounds.size() >= 256) // Максимально допустимое количество звуков в SFML
         return;
-    sounds.push_back(s_entity);
-    sounds.back().setBuffer(buffer);
+    sounds.emplace_back(sf::Sound{ buffer });
     sounds.back().play();
 }
 
@@ -481,7 +466,7 @@ void Orchestre::update()
 ////////////////////////////////////////////////////////////////////////////////
 bool TextureInfo::init()
 {
-    if (!texture.loadFromFile(std::string(RES_DIR) + source))
+    if (!texture.loadFromFile(string(RES_DIR) + source))
         return false;
     texture.setSmooth(true);
     return true;
@@ -505,11 +490,10 @@ AnimationSequence::AnimationSequence(float _length) : length(_length)
 
 void AnimationSequence::advance(float tdelta)
 {
-    Sequence::iterator noden;
-    float t = time + tdelta;
+    auto t = time + tdelta;
     time = t > length ? t - length : t;
     for (
-        noden = node;
+        auto noden = node;
         node->time * length > time && noden->time * length > time || noden->time * length < time;
         (node = noden), noden = (++noden != sequence.end()) ? noden : sequence.begin()
         );
@@ -523,7 +507,7 @@ SpriteInfo* AnimationSequence::sprite_get() const
 ////////////////////////////////////////////////////////////////////////////////
 bool SoundInfo::init()
 {
-    if (!buffer.loadFromFile(std::string(RES_DIR) + source))
+    if (!buffer.loadFromFile(string(RES_DIR) + source))
         return false;
     return true;
 }

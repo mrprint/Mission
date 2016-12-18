@@ -1,49 +1,39 @@
 ﻿#include "settings.hpp"
-#include <math.h>
+#include <cmath>
 #include <vector>
 #include <algorithm>
 #include <limits>
-#include <cstdlib>
 #include <new>
+#include <random>
+#include <chrono>
 #include "world.hpp"
 #include "spaces.hpp"
 #include "pathfinding.hpp"
 #include "main.hpp"
 
+using namespace std;
+
 unsigned level;
 GameState the_state;
 Field the_field;
-UnitsList the_alives(std::max(std::max(sizeof(Character), sizeof(Guard)), sizeof(Fireball)), WORLD_DIM * WORLD_DIM / 2);
+UnitsList the_alives(max(max(sizeof(Character), sizeof(Guard)), sizeof(Fireball)), WORLD_DIM * WORLD_DIM / 2);
 Artillery the_artillery;
 Character *the_character;
 SoundsQueue the_sounds;
 
+static default_random_engine rng;
+static uniform_real_distribution<> ureal_dist(0.0, 1.0);
+
 // Мелкие вспомогательные функции
-
-static inline int randint(int max = RAND_MAX)
-{
-    return rand() % max;
-}
-
-static inline float randomf()
-{
-    return static_cast<float>(randint()) / static_cast <float>(RAND_MAX);
-}
 
 static inline bool rnd_choice(float possib)
 {
-    return randomf() < possib;
+    return ureal_dist(rng) < possib;
 }
 
 static inline float deviation_apply(float val, float dev)
 {
-    return (2 * dev * randomf() - dev + 1) * val;
-}
-
-template<typename T>
-static inline T round(T number)
-{
-    return number < static_cast<T>(0.0) ? ceil(number - static_cast<T>(0.5)) : floor(number + static_cast<T>(0.5));
+    return (2 * dev * static_cast<float>(ureal_dist(rng)) - dev + 1) * val;
 }
 
 static inline int complexity_apply(int val, float kc)
@@ -144,7 +134,7 @@ void Character::set_speed()
         speed = 0.0f;
         return;
     }
-    SpacePosition d = way.neigpos - position;
+    auto d = way.neigpos - position;
     if (d.x < F_EPSILON && d.x > -F_EPSILON && d.y < F_EPSILON && d.y > -F_EPSILON)
     {
         speed = 0.0f;
@@ -182,15 +172,22 @@ void Guard::move(float tdelta)
     Unit::move(tdelta);
     DeskPosition dp = position;
     if (the_field[dp].attribs.test(Cell::atrGUARDBACKW))
-        speed.x = -fabs(speed.x);
+        speed.x = -abs(speed.x);
     if (the_field[dp].attribs.test(Cell::atrGUARDFORW))
-        speed.x = fabs(speed.x);
+        speed.x = abs(speed.x);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Инициализация вселенной
 void world_setup()
 {
+    rng.seed(
+        static_cast<unsigned>(
+            chrono::duration_cast<chrono::milliseconds>(
+                chrono::steady_clock::now().time_since_epoch()
+                ).count()
+            )
+    );
     lists_clear();
 
     // Размечаем поле
@@ -230,10 +227,10 @@ void world_setup()
         apositions[WORLD_DIM - 1 + i].delay = deviation_apply(ART_B_DELAY, ART_DEV);
         apositions[WORLD_DIM - 1 + i].timeout = 0.0f;
     }
-    std::random_shuffle(apositions.begin(), apositions.end());
-    int acount = std::min(complexity_apply(ART_COUNT, LEVEL_COMPL), static_cast<int>(apositions.capacity()));
-    for (int i = 0; i < acount; i++)
-        the_artillery.setting.push_back(apositions[i]);
+    shuffle(apositions.begin(), apositions.end(), rng);
+    auto apend = apositions.begin()
+        + min(complexity_apply(ART_COUNT, LEVEL_COMPL), static_cast<int>(apositions.capacity()));
+    copy(apositions.begin(), apend, back_inserter(the_artillery.setting));
 }
 
 // Изменения в состоянии мира за отведённый квант времени
@@ -242,8 +239,7 @@ void move_do(float tdelta)
     // Перемещаем существующие юниты и удаляем отжившие
     for (UnitsList::iterator it = the_alives.begin(); it != the_alives.end();)
     {
-        Unit *u = &*it;
-        u->move(tdelta);
+        it->move(tdelta);
         if (it->position.x > 1.0f || it->position.x < -1.0f || it->position.y > 1.0f || it->position.y < -1.0f)
         {
             it->~Unit();
@@ -253,28 +249,25 @@ void move_do(float tdelta)
             ++it;
     }
     // Генерируем новые выстрелы
+    for (auto &setting : the_artillery.setting)
     {
-        Fireball *pnewfb;
-        for (Artillery::Settings::iterator it = the_artillery.setting.begin(); it != the_artillery.setting.end(); ++it)
+        setting.timeout -= tdelta;
+        if (setting.timeout <= 0.0f)
         {
-            it->timeout -= tdelta;
-            if (it->timeout <= 0.0f)
-            {
-                it->timeout = it->delay;
-                pnewfb = reinterpret_cast<Fireball*>(the_alives.allocate());
-                if (!pnewfb)
-                    // Контейнер переполнен
-                    continue;
-                new (pnewfb) Fireball();
-                pnewfb->position = it->position;
-                if (it->speed.x > 0.0f)
-                    pnewfb->position.x -= CELL_HW;
-                else
-                    pnewfb->position.y -= CELL_HW;
-                pnewfb->size = U_SIZE;
-                pnewfb->speed = it->speed;
-                the_sounds.push_back(seSHOT);
-            }
+            setting.timeout = setting.delay;
+            auto pnewfb = reinterpret_cast<Fireball*>(the_alives.allocate());
+            if (!pnewfb)
+                // Контейнер переполнен
+                continue;
+            new (pnewfb) Fireball();
+            pnewfb->position = setting.position;
+            if (setting.speed.x > 0.0f)
+                pnewfb->position.x -= CELL_HW;
+            else
+                pnewfb->position.y -= CELL_HW;
+            pnewfb->size = U_SIZE;
+            pnewfb->speed = setting.speed;
+            the_sounds.push_back(seSHOT);
         }
     }
 }
@@ -287,11 +280,11 @@ void state_check()
         the_state = gsWIN;
         return;
     }
-    for (UnitsList::iterator it = the_alives.begin(); it != the_alives.end(); ++it)
+    for (auto &alive : the_alives)
     {
-        if (&*it == the_character)
+        if (&alive == the_character)
             continue;
-        if (the_character->is_collided(*it))
+        if (the_character->is_collided(alive))
         {
             the_state = gsLOSS;
             return;

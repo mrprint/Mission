@@ -2,7 +2,8 @@
 
 #include <vector>
 #include <deque>
-#include <set>
+#include <bitset>
+#include <string>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include "world.hpp"
@@ -90,7 +91,8 @@ class Engine
 {
     enum ControlState {
         csLMBUTTON,
-        csRMBUTTON
+        csRMBUTTON,
+        _csEND
     };
 
     sf::RenderWindow* window;
@@ -98,7 +100,7 @@ class Engine
     std::vector<TextureInfo> textures;
     std::vector<SpriteInfo> sprites;
     std::vector<SoundInfo> sounds;
-    std::set<ControlState> controls;
+    std::bitset<_csEND> controls;
     ScreenPosition mouse_p;
     Orchestre played_sounds;
     float banner_timeout;
@@ -116,12 +118,12 @@ private:
     void frame_render();
     void input_process();
     void update(sf::Time);
-    void sprite_draw(sf::Sprite*, const ScreenPosition&, float);
+    void sprite_draw(sf::Sprite&, const ScreenPosition&, float);
     void field_draw();
     void path_change(DeskPosition);
     bool cell_flip(DeskPosition);
     void sounds_play();
-    void text_print(const ScreenPosition&, unsigned, const char*, bool = false);
+    void text_print(const ScreenPosition&, unsigned, const std::string&, bool = false);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
