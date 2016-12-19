@@ -22,7 +22,7 @@ public:
     enum Flags {
         cwREADY = 1,
         cwSTART = 2,
-        cwDONE = 4,
+        cwDONE = 4
     };
 
     Coworker() : flags(cwREADY), thread(&Coworker::body, this), field(NULL) {}
