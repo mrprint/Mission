@@ -27,11 +27,6 @@ enum SoundEvent {
 
 typedef std::deque<SoundEvent> SoundsQueue; // Очередь звуков
 
-void world_setup();
-void move_do(float);
-void state_check();
-void lists_clear();
-
 ////////////////////////////////////////////////////////////////////////////////
 // Клетка на игровом поле
 class Cell
@@ -171,12 +166,29 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Основные объекты
+// Вселенная
 
-extern unsigned level; // Текущий уровень, начиная с 0
-extern GameState the_state; // Этап игры
-extern Field the_field; // Игровое поле
-extern UnitsList the_alives; // Активные объекты
-extern Artillery the_artillery; // Все пушки
-extern Character *the_character; // Указатель на юнит главного героя, содержащийся в общем списке
-extern SoundsQueue the_sounds; // Очередь звуков
+class World
+{
+public:
+    unsigned level; // Текущий уровень, начиная с 0
+    GameState state; // Этап игры
+    Field field; // Игровое поле
+    UnitsList alives; // Активные объекты
+    Artillery artillery; // Все пушки
+    Character *character; // Указатель на юнит главного героя, содержащийся в общем списке
+    SoundsQueue sounds; // Очередь звуков
+
+    World() :
+        level(0),
+        state(gsINPROGRESS),
+        alives(std::max(std::max(sizeof(Character), sizeof(Guard)), sizeof(Fireball)), WORLD_DIM * WORLD_DIM / 2) 
+    { }
+    void move_do(float);
+    void setup();
+    void state_check();
+    void lists_clear();
+};
+
+extern World the_world;
+

@@ -13,13 +13,7 @@
 
 using namespace std;
 
-unsigned level;
-GameState the_state;
-Field the_field;
-UnitsList the_alives(max(max(sizeof(Character), sizeof(Guard)), sizeof(Fireball)), WORLD_DIM * WORLD_DIM / 2);
-Artillery the_artillery;
-Character *the_character;
-SoundsQueue the_sounds;
+World the_world;
 
 static default_random_engine rng;
 static uniform_real_distribution<> ureal_dist(0.0, 1.0);
@@ -38,12 +32,12 @@ static inline float deviation_apply(float val, float dev)
 
 static inline int complexity_apply(int val, float kc)
 {
-    return val + static_cast<int>(round(val * level * kc));
+    return val + static_cast<int>(round(val * the_world.level * kc));
 }
 
 static inline float complexity_apply(float val, float kc)
 {
-    return val + val * level * kc;
+    return val + val * the_world.level * kc;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -97,7 +91,7 @@ Character::Character() : Unit()
 
 void Character::move(float tdelta)
 {
-    if (the_state == gsINPROGRESS)
+    if (the_world.state == gsINPROGRESS)
         // Перемещаемся только во время игры
         Unit::move(tdelta);
     if (way.path.size() == 0)
@@ -149,7 +143,7 @@ void Character::way_new_request(DeskPosition pos)
 {
     speed = 0.0f;
     way.target = pos;
-    the_coworker.path_find_request(the_field, position, pos);
+    the_coworker.path_find_request(the_world.field, position, pos);
     path_requested = true;
 }
 
@@ -171,15 +165,15 @@ void Guard::move(float tdelta)
 {
     Unit::move(tdelta);
     DeskPosition dp = position;
-    if (the_field[dp].attribs.test(Cell::atrGUARDBACKW))
+    if (the_world.field[dp].attribs.test(Cell::atrGUARDBACKW))
         speed.x = -abs(speed.x);
-    if (the_field[dp].attribs.test(Cell::atrGUARDFORW))
+    if (the_world.field[dp].attribs.test(Cell::atrGUARDFORW))
         speed.x = abs(speed.x);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Инициализация вселенной
-void world_setup()
+void World::setup()
 {
     rng.seed(
         static_cast<unsigned>(
@@ -193,22 +187,22 @@ void world_setup()
     // Размечаем поле
     for (int y = 0; y < WORLD_DIM; y++)
         for (int x = 0; x < WORLD_DIM; x++)
-            the_field(x, y).attribs.reset();
-    the_field(WORLD_DIM - 1, 0).attribs.set(Cell::atrEXIT); // Позиция выхода
-    the_field(0, 2).attribs.set(Cell::atrGUARDFORW); // Вешка направления движения охраны
-    the_field(WORLD_DIM - 1, 2).attribs.set(Cell::atrGUARDBACKW); // Вешка направления движения охраны
+            field(x, y).attribs.reset();
+    field(WORLD_DIM - 1, 0).attribs.set(Cell::atrEXIT); // Позиция выхода
+    field(0, 2).attribs.set(Cell::atrGUARDFORW); // Вешка направления движения охраны
+    field(WORLD_DIM - 1, 2).attribs.set(Cell::atrGUARDBACKW); // Вешка направления движения охраны
     // Главный герой
     {
-        the_character = reinterpret_cast<Character*>(the_alives.allocate());
-        new (the_character) Character();
-        the_character->position = DeskPosition(0, WORLD_DIM - 1);
-        the_character->way.target = DeskPosition(0, WORLD_DIM - 1);
-        the_character->set_speed();
+        character = reinterpret_cast<Character*>(alives.allocate());
+        new (character) Character();
+        character->position = DeskPosition(0, WORLD_DIM - 1);
+        character->way.target = DeskPosition(0, WORLD_DIM - 1);
+        character->set_speed();
     }
     // Стража
     {
         Guard *pgrd;
-        pgrd = reinterpret_cast<Guard*>(the_alives.allocate());
+        pgrd = reinterpret_cast<Guard*>(alives.allocate());
         new (pgrd) Guard();
         pgrd->position = DeskPosition(0, 2);
         pgrd->size = U_SIZE * 1.5f;
@@ -230,32 +224,32 @@ void world_setup()
     shuffle(apositions.begin(), apositions.end(), rng);
     auto apend = apositions.begin()
         + min(complexity_apply(ART_COUNT, LEVEL_COMPL), static_cast<int>(apositions.capacity()));
-    copy(apositions.begin(), apend, back_inserter(the_artillery.setting));
+    copy(apositions.begin(), apend, back_inserter(artillery.setting));
 }
 
 // Изменения в состоянии мира за отведённый квант времени
-void move_do(float tdelta)
+void World::move_do(float tdelta)
 {
     // Перемещаем существующие юниты и удаляем отжившие
-    for (UnitsList::iterator it = the_alives.begin(); it != the_alives.end();)
+    for (UnitsList::iterator it = alives.begin(); it != alives.end();)
     {
         it->move(tdelta);
         if (it->position.x > 1.0f || it->position.x < -1.0f || it->position.y > 1.0f || it->position.y < -1.0f)
         {
             it->~Unit();
-            it = the_alives.erase(it);
+            it = alives.erase(it);
         }
         else
             ++it;
     }
     // Генерируем новые выстрелы
-    for (auto &setting : the_artillery.setting)
+    for (auto &setting : artillery.setting)
     {
         setting.timeout -= tdelta;
         if (setting.timeout <= 0.0f)
         {
             setting.timeout = setting.delay;
-            auto pnewfb = reinterpret_cast<Fireball*>(the_alives.allocate());
+            auto pnewfb = reinterpret_cast<Fireball*>(alives.allocate());
             if (!pnewfb)
                 // Контейнер переполнен
                 continue;
@@ -267,39 +261,39 @@ void move_do(float tdelta)
                 pnewfb->position.y -= CELL_HW;
             pnewfb->size = U_SIZE;
             pnewfb->speed = setting.speed;
-            the_sounds.push_back(seSHOT);
+            sounds.push_back(seSHOT);
         }
     }
 }
 
 // Проверка состояния игры
-void state_check()
+void World::state_check()
 {
-    if (the_field[the_character->position].attribs.test(Cell::atrEXIT))
+    if (field[character->position].attribs.test(Cell::atrEXIT))
     {
-        the_state = gsWIN;
+        state = gsWIN;
         return;
     }
-    for (auto &alive : the_alives)
+    for (auto &alive : alives)
     {
-        if (&alive == the_character)
+        if (&alive == character)
             continue;
-        if (the_character->is_collided(alive))
+        if (character->is_collided(alive))
         {
-            the_state = gsLOSS;
+            state = gsLOSS;
             return;
         }
     }
 }
 
 // Очистка всех списков
-void lists_clear()
+void World::lists_clear()
 {
-    for (UnitsList::iterator it = the_alives.begin(); !the_alives.empty(); )
+    for (UnitsList::iterator it = alives.begin(); !alives.empty(); )
     {
         it->~Unit();
-        it = the_alives.erase(it);
+        it = alives.erase(it);
     }
-    the_artillery.setting.clear();
-    the_sounds.clear();
+    artillery.setting.clear();
+    sounds.clear();
 }
