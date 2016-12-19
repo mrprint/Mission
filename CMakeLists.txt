@@ -47,6 +47,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic")
 endif()
 
 find_package(SFML 2.3 COMPONENTS system window graphics audio REQUIRED)
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+	find_package(SFML 2.3 COMPONENTS main REQUIRED)
+endif()
+
 find_package(Threads REQUIRED)
 
 include_directories(${SFML_INCLUDE_DIR})
@@ -66,6 +71,10 @@ endif()
 if(THREADS_HAVE_PTHREAD_ARG)
   set_property(TARGET mission APPEND PROPERTY COMPILE_OPTIONS "-pthread")
   set_property(TARGET mission APPEND PROPERTY INTERFACE_COMPILE_OPTIONS "-pthread")
+endif()
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+	set_property(TARGET mission PROPERTY WIN32_EXECUTABLE TRUE)
 endif()
 
 if(CMAKE_THREAD_LIBS_INIT)
