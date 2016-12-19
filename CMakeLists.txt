@@ -1,4 +1,6 @@
 cmake_minimum_required (VERSION 2.8)
+cmake_policy(SET CMP0054 OLD)
+
 project (Mission)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules")
 
@@ -17,6 +19,8 @@ CHECK_CXX_COMPILER_FLAG("-std=c++1y" COMPILER_SUPPORTS_CXX1y)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
 CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
 CHECK_CXX_COMPILER_FLAG("-pedantic" COMPILER_SUPPORTS_PEDANTIC)
+CHECK_CXX_COMPILER_FLAG("-fno-rtti" COMPILER_SUPPORTS_FNO_RTTI)
+CHECK_CXX_COMPILER_FLAG("/GR-" COMPILER_SUPPORTS_GR_MINUS)
 
 if(COMPILER_SUPPORTS_CXX17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
@@ -45,11 +49,6 @@ endif()
 find_package(SFML 2.3 COMPONENTS system window graphics audio REQUIRED)
 find_package(Threads REQUIRED)
 
-if(THREADS_HAVE_PTHREAD_ARG)
-  set_property(TARGET mission APPEND PROPERTY COMPILE_OPTIONS "-pthread")
-  set_property(TARGET mission APPEND PROPERTY INTERFACE_COMPILE_OPTIONS "-pthread")
-endif()
-
 include_directories(${SFML_INCLUDE_DIR})
 add_executable(mission
 	src/main.cpp
@@ -57,6 +56,17 @@ add_executable(mission
 	src/engine.cpp
 	src/spaces.cpp
 )
+
+if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC") AND COMPILER_SUPPORTS_GR_MINUS)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
+elseif (COMPILER_SUPPORTS_FNO_RTTI)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
+endif()
+
+if(THREADS_HAVE_PTHREAD_ARG)
+  set_property(TARGET mission APPEND PROPERTY COMPILE_OPTIONS "-pthread")
+  set_property(TARGET mission APPEND PROPERTY INTERFACE_COMPILE_OPTIONS "-pthread")
+endif()
 
 if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(mission "${CMAKE_THREAD_LIBS_INIT}")

@@ -26,7 +26,7 @@ public:
     enum Flags {
         cwREADY = 1,
         cwSTART = 2,
-        cwDONE = 4,
+        cwDONE = 4
     };
 
     Coworker() : field(nullptr) { flags.store(cwREADY); }
