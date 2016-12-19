@@ -86,7 +86,7 @@ void Coworker::body()
 
 void Coworker::start_wait()
 {
-    for (bool done = false; !done; sf::sleep(sf::microseconds(POLL_GRANULARITY)))
+    for (bool done = false; !done; sf::sleep(sf::milliseconds(POLL_GRANULARITY)))
     {
         mutex.lock();
         if (flags & static_cast<unsigned>(cwSTART))

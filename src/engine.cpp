@@ -209,10 +209,10 @@ void Engine::input_process()
             switch (evt.mouseButton.button)
             {
             case sf::Mouse::Left:
-                controls.insert(csLMBUTTON);
+                controls.set(csLMBUTTON);
                 break;
             case sf::Mouse::Right:
-                controls.insert(csRMBUTTON);
+                controls.set(csRMBUTTON);
                 break;
             }
             break;
@@ -221,10 +221,10 @@ void Engine::input_process()
             switch (evt.mouseButton.button)
             {
             case sf::Mouse::Left:
-                controls.erase(csLMBUTTON);
+                controls.reset(csLMBUTTON);
                 break;
             case sf::Mouse::Right:
-                controls.erase(csRMBUTTON);
+                controls.reset(csRMBUTTON);
                 break;
             }
             break;
@@ -283,7 +283,7 @@ void Engine::update(sf::Time tdelta)
         state_check(); // Оцениваем состояние игры
     }
 
-    if (controls.count(csLMBUTTON) && the_state == gsINPROGRESS)
+    if (controls.test(csLMBUTTON) && the_state == gsINPROGRESS)
     {
         if (!the_character->path_requested && the_coworker.flags_get(Coworker::cwREADY) && !lb_down)
         {
@@ -294,7 +294,7 @@ void Engine::update(sf::Time tdelta)
     }
     else
         lb_down = false;
-    if (controls.count(csRMBUTTON) && the_state == gsINPROGRESS)
+    if (controls.test(csRMBUTTON) && the_state == gsINPROGRESS)
     {
 
         if (!the_character->path_requested && the_coworker.flags_get(Coworker::cwREADY) && !rb_down)
