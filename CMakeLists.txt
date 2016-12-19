@@ -27,6 +27,10 @@ endif()
 
 find_package(SFML 2.3 COMPONENTS system window graphics audio REQUIRED)
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+	find_package(SFML 2.3 COMPONENTS main REQUIRED)
+endif()
+
 include_directories(${SFML_INCLUDE_DIR})
 add_executable(mission 
 	src/main.cpp 
@@ -39,6 +43,10 @@ if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC") AND COMPILER_SUPPORTS_GR_MINUS)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
 elseif (COMPILER_SUPPORTS_FNO_RTTI)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
+endif()
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+	set_property(TARGET mission PROPERTY WIN32_EXECUTABLE TRUE)
 endif()
 
 target_link_libraries(mission ${SFML_LIBRARIES})
