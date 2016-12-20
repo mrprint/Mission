@@ -149,13 +149,13 @@ void Engine::frame_render()
 
     field_draw();
     // Отображаем игровую информацию
-    snprintf(buffer, sizeof(buffer), "Level %d", level + 1);
+    snprintf(buffer, sizeof(buffer), "Level %d", the_world.level + 1);
     text_print(
         ScreenPosition(static_cast<float>(sizes.lc_ofst)),
         TEXT_COLOR,
         reinterpret_cast<char*>(&buffer)
     );
-    switch (the_state)
+    switch (the_world.state)
     {
     case gsLOSS:
         text_print(
@@ -248,7 +248,7 @@ void Engine::update(sf::Time tdelta)
     if (dt > MAX_TIME_FRACT)
         dt = MAX_TIME_FRACT; // Замедляем время, если машина не успевает считать
 
-    if (the_state != gsINPROGRESS)
+    if (the_world.state != gsINPROGRESS)
     {
         // Обработка таймаута вывода баннеров выигрыша/поражения
         if (banner_timeout > 0.0f)
@@ -257,35 +257,35 @@ void Engine::update(sf::Time tdelta)
             if (banner_timeout <= 0.0f)
             {
                 // Снимаем баннер и настраиваем уровень
-                the_state = gsINPROGRESS;
-                world_setup();
+                the_world.state = gsINPROGRESS;
+                the_world.setup();
             }
         }
         else
         {
             // Показываем баннер и выполняем базовые настройки при смене состояния
             banner_timeout = BANNER_TOUT;
-            switch (the_state)
+            switch (the_world.state)
             {
             case gsLOSS:
-                the_sounds.push_back(seHIT);
-                level = 0;
+                the_world.sounds.push_back(seHIT);
+                the_world.level = 0;
                 break;
             case gsWIN:
-                the_sounds.push_back(seLVLUP);
-                ++level;
+                the_world.sounds.push_back(seLVLUP);
+                ++the_world.level;
                 break;
             }
         }
     }
     else
     {
-        state_check(); // Оцениваем состояние игры
+        the_world.state_check(); // Оцениваем состояние игры
     }
 
-    if (controls.test(csLMBUTTON) && the_state == gsINPROGRESS)
+    if (controls.test(csLMBUTTON) && the_world.state == gsINPROGRESS)
     {
-        if (!the_character->path_requested && the_coworker.flags_get(Coworker::cwREADY) && !lb_down)
+        if (!the_world.character->path_requested && the_coworker.flags_get(Coworker::cwREADY) && !lb_down)
         {
             // Будем идти в указанную позицию
             path_change(mouse_p);
@@ -294,29 +294,29 @@ void Engine::update(sf::Time tdelta)
     }
     else
         lb_down = false;
-    if (controls.test(csRMBUTTON) && the_state == gsINPROGRESS)
+    if (controls.test(csRMBUTTON) && the_world.state == gsINPROGRESS)
     {
 
-        if (!the_character->path_requested && the_coworker.flags_get(Coworker::cwREADY) && !rb_down)
+        if (!the_world.character->path_requested && the_coworker.flags_get(Coworker::cwREADY) && !rb_down)
         {
             // Пытаемся изменить состояние ячейки "свободна"/"препятствие"
             if (cell_flip(mouse_p))
             {
                 // При необходимости обсчитываем изменения пути
-                if (the_character->way.path.size() > 0)
-                    the_character->way_new_request(the_character->way.target);
+                if (the_world.character->way.path.size() > 0)
+                    the_world.character->way_new_request(the_world.character->way.target);
             }
             rb_down = true;
         }
     }
     else
         rb_down = false;
-    if (the_character->path_requested && the_coworker.flags_get(Coworker::cwREADY))
+    if (the_world.character->path_requested && the_coworker.flags_get(Coworker::cwREADY))
     {
-        the_character->path_requested = false;
-        the_character->way_new_process();
+        the_world.character->path_requested = false;
+        the_world.character->way_new_process();
     }
-    move_do(dt); // Рассчитываем изменения
+    the_world.move_do(dt); // Рассчитываем изменения
     sounds_play(); // Воспроизводим звуки
 }
 
@@ -353,9 +353,9 @@ void Engine::field_draw()
     for (int y = 0; y < WORLD_DIM; y++)
         for (int x = 0; x < WORLD_DIM; x++)
         {
-            if (!the_field(x, y).attribs.test(Cell::atrOBSTACLE))
+            if (!the_world.field(x, y).attribs.test(Cell::atrOBSTACLE))
                 sprite_draw(&sprites[sprTILE].sprite, DeskPosition(x, y), sizes.spr_scale);
-            if (the_field(x, y).attribs.test(Cell::atrEXIT))
+            if (the_world.field(x, y).attribs.test(Cell::atrEXIT))
                 sprite_draw(&sprites[sprEXIT].sprite, DeskPosition(x, y), sizes.spr_scale);
         };
     // Рисуем стены
@@ -365,7 +365,7 @@ void Engine::field_draw()
         sprite_draw(&sprites[sprLWALL].sprite, DeskPosition(0, i), sizes.spr_scale);
     }
     // Рисуем пушки
-    for (Artillery::Settings::iterator it = the_artillery.setting.begin(); it != the_artillery.setting.end(); ++it)
+    for (Artillery::Settings::iterator it = the_world.artillery.setting.begin(); it != the_world.artillery.setting.end(); ++it)
     {
         if (fabs(it->speed.x) < std::numeric_limits<float>::epsilon())
             sprite_draw(&sprites[sprRBATT].sprite, it->position, sizes.spr_scale);
@@ -375,7 +375,7 @@ void Engine::field_draw()
     // Заполняем список юнитов с их экранными координатами
     ScreenPositions positions;
     UnitOnScreen uos;
-    for (UnitsList::iterator it = the_alives.begin(); it != the_alives.end(); ++it)
+    for (UnitsList::iterator it = the_world.alives.begin(); it != the_world.alives.end(); ++it)
     {
         uos.pos = it->position;
         uos.unit = &*it;
@@ -387,7 +387,7 @@ void Engine::field_draw()
     {
         switch (it->unit->id()) {
         case Unit::utCharacter:
-            if (the_character->path_requested)
+            if (the_world.character->path_requested)
                 sprite_draw(&sprites[sprCHART].sprite, it->pos, sizes.spr_scale);
             else
                 sprite_draw(&sprites[sprCHAR].sprite, it->pos, sizes.spr_scale);
@@ -404,13 +404,13 @@ void Engine::field_draw()
 // Изменение состояния указанной мышкой ячейки
 bool Engine::cell_flip(DeskPosition md)
 {
-    DeskPosition dp = the_character->position;
+    DeskPosition dp = the_world.character->position;
     if (md.x < 0 || md.x >= WORLD_DIM || md.y < 0 || md.y >= WORLD_DIM || (md.x == dp.x && md.y == dp.y))
         return false;
-    if (the_field[md].attribs.test(Cell::atrOBSTACLE))
-        the_field[md].attribs.reset(Cell::atrOBSTACLE);
+    if (the_world.field[md].attribs.test(Cell::atrOBSTACLE))
+        the_world.field[md].attribs.reset(Cell::atrOBSTACLE);
     else
-        the_field[md].attribs.set(Cell::atrOBSTACLE);
+        the_world.field[md].attribs.set(Cell::atrOBSTACLE);
     return true;
 }
 
@@ -419,15 +419,15 @@ void Engine::path_change(DeskPosition md)
 {
     if (md.x < 0 || md.x >= WORLD_DIM || md.y < 0 || md.y >= WORLD_DIM)
         return;
-    the_character->way_new_request(md);
+    the_world.character->way_new_request(md);
 }
 
 void Engine::sounds_play()
 {
     played_sounds.update();
-    while (!the_sounds.empty())
+    while (!the_world.sounds.empty())
     {
-        switch (the_sounds.front())
+        switch (the_world.sounds.front())
         {
         case seSHOT:
             played_sounds.play(sounds[sndSHOT].buffer);
@@ -439,7 +439,7 @@ void Engine::sounds_play()
             played_sounds.play(sounds[sndLUP].buffer);
             break;
         }
-        the_sounds.pop_front();
+        the_world.sounds.pop_front();
     }
 }
 
