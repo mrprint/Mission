@@ -7,7 +7,7 @@
 #include "engine.hpp"
 #include "spaces.hpp"
 #include "world.hpp"
-#include "main.hpp"
+#include "coworker.hpp"
 
 using namespace std;
 

@@ -6,10 +6,11 @@
 #include <atomic>
 #include <condition_variable>
 #include "world.hpp"
-#include "pathfinding.hpp"
 #include "spaces.hpp"
 
 // Вспомогательный поток расчета пути
+// Изначально был задействован для преодоления на скорую руку сверхнизкой производительности
+// использовавшейся имплементации поиска пути, а сейчас оставлен "на всякий случай"
 class Coworker
 {
     std::atomic<unsigned> flags;
@@ -38,7 +39,7 @@ public:
     // Запрос на расчёт пути
     void path_find_request(const Field&, DeskPosition, DeskPosition);
     // Получение результата
-    const Path& path_read() const;
+    const Path& path_read() const { return path; }
 
 private:
 

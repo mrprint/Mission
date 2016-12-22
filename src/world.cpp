@@ -9,7 +9,7 @@
 #include "world.hpp"
 #include "spaces.hpp"
 #include "pathfinding.hpp"
-#include "main.hpp"
+#include "coworker.hpp"
 
 using namespace std;
 

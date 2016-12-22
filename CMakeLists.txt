@@ -2,6 +2,9 @@ cmake_minimum_required (VERSION 2.8)
 cmake_policy(SET CMP0054 OLD)
 
 project (Mission)
+
+option(NO_THREADS "Single-threaded, synchronous mode" OFF)
+
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules")
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
@@ -9,6 +12,20 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 endif()
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
+
+set(SRCS ${SRCS} 
+	src/main.cpp
+	src/world.cpp
+	src/engine.cpp
+	src/spaces.cpp)
+
+if(NO_THREADS)
+	add_definitions(-DNO_THREADS)
+	set(SRCS ${SRCS} src/coworker_sync.cpp)
+else()
+	add_definitions(-DWITH_THREADS)
+	set(SRCS ${SRCS} src/coworker_async.cpp)
+endif()
 
 include(CheckCXXCompilerFlag)
 
@@ -23,17 +40,17 @@ CHECK_CXX_COMPILER_FLAG("-fno-rtti" COMPILER_SUPPORTS_FNO_RTTI)
 CHECK_CXX_COMPILER_FLAG("/GR-" COMPILER_SUPPORTS_GR_MINUS)
 
 if(COMPILER_SUPPORTS_CXX17)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 elseif(COMPILER_SUPPORTS_CXX1z)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z")
 elseif(COMPILER_SUPPORTS_CXX14)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 elseif(COMPILER_SUPPORTS_CXX1y)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
 elseif(COMPILER_SUPPORTS_CXX11)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 elseif(COMPILER_SUPPORTS_CXX0X)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 endif()
 
 if((COMPILER_SUPPORTS_CXX17
@@ -55,22 +72,17 @@ endif()
 find_package(Threads REQUIRED)
 
 include_directories(${SFML_INCLUDE_DIR})
-add_executable(mission
-	src/main.cpp
-	src/world.cpp
-	src/engine.cpp
-	src/spaces.cpp
-)
+add_executable(mission ${SRCS})
 
 if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC") AND COMPILER_SUPPORTS_GR_MINUS)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
 elseif (COMPILER_SUPPORTS_FNO_RTTI)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
 endif()
 
-if(THREADS_HAVE_PTHREAD_ARG)
-  set_property(TARGET mission APPEND PROPERTY COMPILE_OPTIONS "-pthread")
-  set_property(TARGET mission APPEND PROPERTY INTERFACE_COMPILE_OPTIONS "-pthread")
+if((NOT NO_THREADS) AND THREADS_HAVE_PTHREAD_ARG)
+	set_property(TARGET mission APPEND PROPERTY COMPILE_OPTIONS "-pthread")
+	set_property(TARGET mission APPEND PROPERTY INTERFACE_COMPILE_OPTIONS "-pthread")
 endif()
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
@@ -78,7 +90,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 endif()
 
 if(CMAKE_THREAD_LIBS_INIT)
-  target_link_libraries(mission "${CMAKE_THREAD_LIBS_INIT}")
+	target_link_libraries(mission "${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
 target_link_libraries(mission ${SFML_LIBRARIES})
