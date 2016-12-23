@@ -72,7 +72,7 @@ public:
 
     virtual ~HFStorageParamI() { delete[] storage; }
 
-    virtual void* allocate()
+    virtual void* allocate() override
     {
         if (free == std::numeric_limits<T>::max())
             return 0;
@@ -83,7 +83,7 @@ public:
         return pointer_get(ind);
     }
 
-    virtual void deallocate(void *ptr)
+    virtual void deallocate(void *ptr) override
     {
         if (used == std::numeric_limits<T>::max())
             return;
@@ -99,9 +99,9 @@ public:
         }
     }
 
-    virtual size_t used_get() const { return used; }
+    virtual size_t used_get() const override { return used; }
 
-    virtual void* pointer_get(size_t i) const
+    virtual void* pointer_get(size_t i) const override
     {
         assert(i < std::numeric_limits<T>::max());
         if (i >= std::numeric_limits<T>::max())
@@ -109,7 +109,7 @@ public:
         return ptr_to(static_cast<T>(i));
     }
 
-    virtual size_t prev_get(size_t i) const
+    virtual size_t prev_get(size_t i) const override
     {
         if (i >= std::numeric_limits<T>::max())
             return std::numeric_limits<size_t>::max();
@@ -117,7 +117,7 @@ public:
         return lnk[0];
     }
 
-    virtual size_t next_get(size_t i) const
+    virtual size_t next_get(size_t i) const override
     {
         if (i >= std::numeric_limits<T>::max())
             return std::numeric_limits<size_t>::max();
@@ -235,7 +235,7 @@ template <typename T>
 class HFStorage
 {
 public:
-    typedef T value_type;
+    using value_type = T;
 
 protected:
     HFStorageBasic storage;

@@ -19,7 +19,7 @@ enum {
 template <typename T, int _class=icSPACE>
 struct Vector2D
 {
-    typedef T basetype;
+    using basetype = T;
     basetype x, y;
     Vector2D() { x = static_cast<basetype>(0); y = static_cast<basetype>(0); }
     Vector2D(const Vector2D& val) : x(val.x), y(val.y) {}
@@ -47,7 +47,7 @@ struct Vector2D
 struct DeskPosition;
 struct ScreenPosition;
 
-typedef Vector2D<float> _Vector2D_Space;
+using _Vector2D_Space = Vector2D<float>;
 // Положение в пространстве, где -1.0 соответствует одной границе поля, а 1.0 противоположной
 struct SpacePosition : _Vector2D_Space
 {
@@ -64,7 +64,7 @@ struct SpacePosition : _Vector2D_Space
     SpacePosition& operator=(const ScreenPosition& val);
 };
 
-typedef Vector2D<int, icDESK> _Vector2D_Desk;
+using _Vector2D_Desk = Vector2D<int, icDESK>;
 // Позиция на игровом поле
 struct DeskPosition : _Vector2D_Desk
 {
@@ -80,7 +80,7 @@ struct DeskPosition : _Vector2D_Desk
     DeskPosition& operator=(const ScreenPosition& val) { *this = SpacePosition(val); return *this; };
 };
 
-typedef Vector2D<float, icSCREEN> _Vector2D_Screen;
+using _Vector2D_Screen = Vector2D<float, icSCREEN>;
 // Позиция на дисплее (читает настройки отображения непосредственно из экземпляра Engine)
 struct ScreenPosition : _Vector2D_Screen
 {

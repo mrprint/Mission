@@ -41,7 +41,7 @@ struct AnimationSequence {
         float time;
     };
 
-    typedef std::vector<Node> Sequence;
+    using Sequence = std::vector<Node>;
 
     float length; // длина анимации
     float time; // текущий момент времени

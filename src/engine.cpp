@@ -36,7 +36,7 @@ struct UnitOnScreen {
     bool operator<(const UnitOnScreen &u) { return (pos.y < u.pos.y); }
 };
 
-typedef vector<UnitOnScreen> ScreenPositions; // Список расположения юнитов
+using ScreenPositions = vector<UnitOnScreen>; // Список расположения юнитов
 
 Engine the_engine; // Экземпляр движка
 

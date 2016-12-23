@@ -9,7 +9,7 @@
 #include "pathfinding.hpp"
 #include "spaces.hpp"
 
-typedef Vector2D<float> Speed; // Скорость
+using Speed = Vector2D<float>; // Скорость
 
 // Состояние игры
 enum GameState {
@@ -25,7 +25,7 @@ enum SoundEvent {
     seLVLUP
 };
 
-typedef std::deque<SoundEvent> SoundsQueue; // Очередь звуков
+using SoundsQueue = std::deque<SoundEvent>; // Очередь звуков
 
 ////////////////////////////////////////////////////////////////////////////////
 // Клетка на игровом поле
@@ -42,7 +42,7 @@ public:
         _atrEND
     };
 
-    typedef std::bitset<_atrEND> Attributes;
+    using Attributes = std::bitset<_atrEND>;
 
     Attributes attribs;
 
@@ -68,8 +68,8 @@ public:
     bool isobstacle(int x, int y) const { return cells[y][x].attribs.test(Cell::atrOBSTACLE); }
 };
 
-typedef std::vector<DeskPosition> Path; // Оптимальный путь между ячейками
-typedef AStar<WORLD_DIM, WORLD_DIM, DeskPosition, Field> FieldsAStar; // AStar, подогнанный к Field
+using Path = std::vector<DeskPosition>; // Оптимальный путь между ячейками
+using FieldsAStar = AStar<WORLD_DIM, WORLD_DIM, DeskPosition, Field>; // AStar, подогнанный к Field
 
 ////////////////////////////////////////////////////////////////////////////////
 // Базовый класс игровых юнитов
@@ -141,7 +141,7 @@ class Fireball : public Unit
     virtual Type id() const { return utFireball; }
 };
 
-typedef HFStorage<Unit> UnitsList; // Группа юнитов
+using UnitsList = HFStorage<Unit>; // Группа юнитов
 
 ////////////////////////////////////////////////////////////////////////////////
 // Пушки
@@ -157,7 +157,7 @@ public:
         float timeout;
     };
 
-    typedef std::vector<Setting> Settings;
+    using Settings = std::vector<Setting>;
 
     Settings setting; // Все пушки артбатареи
 
