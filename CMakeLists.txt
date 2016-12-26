@@ -17,6 +17,7 @@ set(SRCS ${SRCS}
 	src/main.cpp
 	src/world.cpp
 	src/engine.cpp
+	src/assets.cpp
 	src/spaces.cpp)
 
 if(NO_THREADS)

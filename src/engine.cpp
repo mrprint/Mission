@@ -8,12 +8,10 @@
 #include "spaces.hpp"
 #include "world.hpp"
 #include "coworker.hpp"
+#include "assets.hpp"
 
 using namespace std;
 
-constexpr static auto BKG_SIZE = 1024.0f;
-constexpr static auto SPR_SIZE = 128.0f;
-constexpr static auto TILE_HOT = SPR_SIZE * 0.75f;
 constexpr static auto TEXT_COLOR = 0xFF0010FF;
 constexpr static auto TEXT_CHR_SIZE = 24;
 constexpr static auto RES_DIR = "resources/";
@@ -45,22 +43,6 @@ Engine::Engine()
 {
     window = new sf::RenderWindow();
     banner_timeout = 0.0f;
-    textures = { "skybkg.png", "sprites.png" };
-    sprites = {
-        {textures[txtBKG], 0, 0, 1024, 1024, 0, 0, BKG_SIZE / 2, BKG_SIZE / 2},
-        {textures[txtSPR], 130, 0, 128, 64, 0, 64, SPR_SIZE / 2, TILE_HOT},
-        {textures[txtSPR], 380, 77, 63, 96, 0, 0, SPR_SIZE / 2, TILE_HOT},
-        {textures[txtSPR], 445, 77, 65, 97, 63, 0, SPR_SIZE / 2, TILE_HOT },
-        {textures[txtSPR], 232, 66, 24, 47, 20, 25, SPR_SIZE / 2, TILE_HOT },
-        {textures[txtSPR], 468, 0, 23, 50, 82, 22, SPR_SIZE / 2, TILE_HOT },
-        {textures[txtSPR], 0, 0, 128, 128, 0, 0, SPR_SIZE / 2, SPR_SIZE },
-        {textures[txtSPR], 0, 130, 66, 35, 29, 77, SPR_SIZE / 2, TILE_HOT },
-        {textures[txtSPR], 130, 66, 100, 72, 11, 47, SPR_SIZE / 2, TILE_HOT },
-        {textures[txtSPR], 364, 0, 102, 75, 18, 44, SPR_SIZE / 2, TILE_HOT },
-        {textures[txtSPR], 290, 109, 88, 91, 19, 16, SPR_SIZE / 2, TILE_HOT },
-        {textures[txtSPR], 260, 0, 102, 107, 5, 0, SPR_SIZE / 2, TILE_HOT }
-    };
-    sounds = { "shot.wav", "hit.wav", "gong.wav" };
     windowed = true;
 }
 
@@ -75,22 +57,8 @@ bool Engine::init()
     videomode_set(windowed);
     if (!(window && window->isOpen()))
         return false;
-
-    for (auto &texture : textures)
-    {
-        if (!texture.init())
-            return false;
-    }
-    for (auto &sprite : sprites)
-    {
-        if (!sprite.init())
-            return false;
-    }
-    for (auto &sound : sounds)
-    {
-        if (!sound.init())
-            return false;
-    }
+    if (!assets_init())
+        return false;
     if (!font.loadFromFile(string(RES_DIR) + "Orbitron Medium.ttf"))
         return false;
 
@@ -136,7 +104,7 @@ void Engine::frame_render()
 {
     if (!window->isOpen())
         return;
-    sprite_draw(sprites[sprBKG].sprite, ScreenPosition(sizes.screen_w, sizes.screen_h) / 2.0f, sizes.bkg_scale);
+    sprite_draw(the_sprites[sprBKG].sprite, ScreenPosition(sizes.screen_w, sizes.screen_h) / 2.0f, sizes.bkg_scale);
 
     field_draw();
     // Отображаем игровую информацию
@@ -344,23 +312,23 @@ void Engine::field_draw()
         for (int x = 0; x < WORLD_DIM; x++)
         {
             if (!the_world.field(x, y).attribs.test(Cell::atrOBSTACLE))
-                sprite_draw(sprites[sprTILE].sprite, DeskPosition(x, y), sizes.spr_scale);
+                sprite_draw(the_sprites[sprTILE].sprite, DeskPosition(x, y), sizes.spr_scale);
             if (the_world.field(x, y).attribs.test(Cell::atrEXIT))
-                sprite_draw(sprites[sprEXIT].sprite, DeskPosition(x, y), sizes.spr_scale);
+                sprite_draw(the_sprites[sprEXIT].sprite, DeskPosition(x, y), sizes.spr_scale);
         };
     // Рисуем стены
     for (int i = 0; i < WORLD_DIM; i++)
     {
-        sprite_draw(sprites[sprRWALL].sprite, DeskPosition(i, 0), sizes.spr_scale);
-        sprite_draw(sprites[sprLWALL].sprite, DeskPosition(0, i), sizes.spr_scale);
+        sprite_draw(the_sprites[sprRWALL].sprite, DeskPosition(i, 0), sizes.spr_scale);
+        sprite_draw(the_sprites[sprLWALL].sprite, DeskPosition(0, i), sizes.spr_scale);
     }
     // Рисуем пушки
     for (auto &setting : the_world.artillery.setting)
     {
         if (abs(setting.speed.x) < numeric_limits<float>::epsilon())
-            sprite_draw(sprites[sprRBATT].sprite, setting.position, sizes.spr_scale);
+            sprite_draw(the_sprites[sprRBATT].sprite, setting.position, sizes.spr_scale);
         else
-            sprite_draw(sprites[sprLBATT].sprite, setting.position, sizes.spr_scale);
+            sprite_draw(the_sprites[sprLBATT].sprite, setting.position, sizes.spr_scale);
     }
     // Заполняем список юнитов с их экранными координатами
     ScreenPositions positions;
@@ -375,15 +343,15 @@ void Engine::field_draw()
         switch (spos.unit->id()) {
         case Unit::utCharacter:
             if (the_world.character->path_requested)
-                sprite_draw(sprites[sprCHART].sprite, spos.pos, sizes.spr_scale);
+                sprite_draw(the_sprites[sprCHART].sprite, spos.pos, sizes.spr_scale);
             else
-                sprite_draw(sprites[sprCHAR].sprite, spos.pos, sizes.spr_scale);
+                sprite_draw(the_sprites[sprCHAR].sprite, spos.pos, sizes.spr_scale);
             break;
         case Unit::utFireball:
-            sprite_draw(sprites[sprFBALL].sprite, spos.pos, sizes.spr_scale * 0.5f);
+            sprite_draw(the_sprites[sprFBALL].sprite, spos.pos, sizes.spr_scale * 0.5f);
             break;
         case Unit::utGuard:
-            sprite_draw(sprites[spos.unit->speed.x >= 0.0f ? sprRGUARD : sprLGUARD].sprite, spos.pos, sizes.spr_scale);
+            sprite_draw(the_sprites[spos.unit->speed.x >= 0.0f ? sprRGUARD : sprLGUARD].sprite, spos.pos, sizes.spr_scale);
         }
     }
 }
@@ -417,13 +385,13 @@ void Engine::sounds_play()
         switch (the_world.sounds.front())
         {
         case seSHOT:
-            played_sounds.play(sounds[sndSHOT].buffer);
+            played_sounds.play(the_sounds[sndSHOT].buffer);
             break;
         case seHIT:
-            played_sounds.play(sounds[sndHIT].buffer);
+            played_sounds.play(the_sounds[sndHIT].buffer);
             break;
         case seLVLUP:
-            played_sounds.play(sounds[sndLUP].buffer);
+            played_sounds.play(the_sounds[sndLUP].buffer);
             break;
         }
         the_world.sounds.pop_front();

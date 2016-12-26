@@ -1,67 +1,9 @@
 ﻿#pragma once
 
-#include <vector>
-#include <deque>
-#include <bitset>
-#include <string>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include "world.hpp"
 #include "spaces.hpp"
-
-// Вся информация о текстуре и её инициализации
-struct TextureInfo {
-    const char *source;
-    sf::Texture texture;
-    TextureInfo(const char *_source) : source(_source) {}
-    bool init();
-};
-
-// Вся информация о спрайте и его инициализации
-struct SpriteInfo {
-    const TextureInfo *texture;
-    sf::IntRect txrect;
-    sf::Vector2u offset;
-    sf::Vector2f spot;
-    sf::Sprite sprite;
-    SpriteInfo(
-        const TextureInfo &_texture,
-        int txx, int txy, int txw, int txh,
-        unsigned ofsx, unsigned ofsy,
-        float spx, float spy
-    ) : texture(&_texture), txrect(txx, txy, txw, txh), offset(ofsx, ofsy), spot(spx, spy) {}
-    bool init();
-};
-
-// Анимация
-struct AnimationSequence {
-
-    struct Node {
-        SpriteInfo *pic;
-        float time;
-    };
-
-    using Sequence = std::vector<Node>;
-
-    float length; // длина анимации
-    float time; // текущий момент времени
-    Sequence sequence;
-    Sequence::iterator node; // текущий узел
-
-    AnimationSequence(float);
-    void advance(float);
-    void time_set(float _time) { advance(time - floor(_time / length) * length); };
-    SpriteInfo* sprite_get() const;
-};
-
-
-// Вся информация о звуке и его инициализации
-struct SoundInfo {
-    const char *source;
-    sf::SoundBuffer buffer;
-    SoundInfo(const char *source) : source(source) {}
-    bool init();
-};
 
 // Воспроизводящиеся звуки
 class Orchestre
@@ -97,9 +39,6 @@ class Engine
 
     sf::RenderWindow* window;
     sf::Font font;
-    std::vector<TextureInfo> textures;
-    std::vector<SpriteInfo> sprites;
-    std::vector<SoundInfo> sounds;
     std::bitset<_csEND> controls;
     ScreenPosition mouse_p;
     Orchestre played_sounds;
