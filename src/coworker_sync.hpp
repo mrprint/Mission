@@ -1,8 +1,6 @@
 ﻿#pragma once
 
-#include <string>
 #include "world.hpp"
-#include "spaces.hpp"
 
 // Вспомогательный объект для расчета пути
 // Имитирует взаимодействие с рабочим потоком

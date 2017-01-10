@@ -1,5 +1,4 @@
 ﻿#include "settings.hpp"
-#include <array>
 #include "assets.hpp"
 
 #include "assets.inc"

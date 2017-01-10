@@ -1,9 +1,6 @@
 ﻿#include "settings.hpp"
-#include <string>
 #include "coworker_sync.hpp"
-#include "engine.hpp"
 #include "world.hpp"
-#include "pathfinding.hpp"
 
 using namespace std;
 
