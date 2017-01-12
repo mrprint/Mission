@@ -150,7 +150,7 @@ void Character::way_new_request(DeskPosition pos)
 // Обработка рассчитанного пути
 void Character::way_new_process()
 {
-    way.path = the_coworker.path_read();
+    the_coworker.path_read(way.path);
     if (way.path.size() > 0)
     {
         way.stage = 0;

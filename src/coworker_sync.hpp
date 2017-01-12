@@ -26,7 +26,7 @@ public:
     // Запрос на расчёт пути
     void path_find_request(const Field&, DeskPosition, DeskPosition);
     // Получение результата
-    const Path& path_read() const { return path; }
+    void path_read(Path& _path) { _path.swap(path); }
 };
 
 extern Coworker the_coworker;

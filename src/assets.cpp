@@ -20,4 +20,5 @@ bool assets_init()
         if (!the_sounds[i].init())
             return false;
     }
+    return true;
 }
