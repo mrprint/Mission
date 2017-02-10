@@ -2,6 +2,7 @@
 #include <limits>
 #include <cmath>
 #include <string>
+#include <memory>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include "engine.hpp"
@@ -41,15 +42,9 @@ Engine the_engine; // Экземпляр движка
 ////////////////////////////////////////////////////////////////////////////////
 Engine::Engine()
 {
-    window = new sf::RenderWindow();
+    window = make_unique<sf::RenderWindow>();
     banner_timeout = 0.0f;
     windowed = true;
-}
-
-Engine::~Engine()
-{
-    if (window)
-        delete window;
 }
 
 bool Engine::init()

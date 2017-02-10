@@ -5,6 +5,7 @@
 #include <functional>
 #include <vector>
 #include <queue>
+#include <memory>
 
 template<
     size_t H, size_t W, // Размерность карты
@@ -31,7 +32,7 @@ protected:
         unsigned char state;
     };
 
-    Attributes *attrs;
+    std::unique_ptr<Attributes[]> attrs;
 
     struct AttrsPtr // Координаты и ссылка на атрибуты
     {
@@ -47,8 +48,7 @@ protected:
 
 public:
 
-    AStar() { temp_buff.reserve(H + W); attrs = new Attributes[H * W]; }
-    ~AStar() { delete[] attrs; }
+    AStar() : attrs(new Attributes[H * W]) { temp_buff.reserve(H + W); }
 
     // Получить смещения (в обратном порядке)
     bool search_ofs(TPath *path, const TMap& map, const TCoords& start_p, const TCoords& finish_p)
@@ -74,7 +74,7 @@ protected:
     {
         static struct { int x, y, d; } dirs[] =
         { { -1, -1, 14 },{ 0, -1, 10 },{ 1, -1, 14 },{ -1, 0, 10 },{ 1, 0, 10 },{ -1, 1, 14 },{ 0, 1, 10 },{ 1, 1, 14 } };
-        memset(attrs, 0, sizeof(Attributes) * H * W);
+        memset(attrs.get(), 0, sizeof(Attributes) * H * W);
         while (!opened.empty()) opened.pop();
 
         AttrsPtr current = opened_push(start_p, cost_estimate(start_p, finish_p));
@@ -116,12 +116,12 @@ protected:
 
     AttrsPtr opened_push(const TCoords& p)
     {
-        AttrsPtr a(p, attrs); opened.push(a); a.pa->state = st_Opened; return a;
+        AttrsPtr a(p, attrs.get()); opened.push(a); a.pa->state = st_Opened; return a;
     }
 
     AttrsPtr opened_push(const TCoords& s, TWeight score)
     {
-        AttrsPtr a(s, attrs); a.pa->fscore = score; opened.push(a); a.pa->state = st_Opened; return a;
+        AttrsPtr a(s, attrs.get()); a.pa->fscore = score; opened.push(a); a.pa->state = st_Opened; return a;
     }
 
     AttrsPtr opened_pop()

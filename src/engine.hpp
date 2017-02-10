@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include <memory>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include "world.hpp"
@@ -37,7 +38,7 @@ class Engine
         _csEND
     };
 
-    sf::RenderWindow* window;
+    std::unique_ptr<sf::RenderWindow> window;
     sf::Font font;
     std::bitset<_csEND> controls;
     ScreenPosition mouse_p;
@@ -48,7 +49,6 @@ public:
     DrawingSizes sizes;
 
     Engine();
-    ~Engine();
     void work_do();
 private:
     bool init();

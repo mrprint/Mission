@@ -73,7 +73,7 @@ endif()
 find_package(Threads REQUIRED)
 
 include_directories(${SFML_INCLUDE_DIR})
-add_executable(mission ${SRCS})
+add_executable(${PROJECT_NAME} ${SRCS})
 
 if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC") AND COMPILER_SUPPORTS_GR_MINUS)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
@@ -82,16 +82,16 @@ elseif (COMPILER_SUPPORTS_FNO_RTTI)
 endif()
 
 if((NOT NO_THREADS) AND THREADS_HAVE_PTHREAD_ARG)
-	set_property(TARGET mission APPEND PROPERTY COMPILE_OPTIONS "-pthread")
-	set_property(TARGET mission APPEND PROPERTY INTERFACE_COMPILE_OPTIONS "-pthread")
+	set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY COMPILE_OPTIONS "-pthread")
+	set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY INTERFACE_COMPILE_OPTIONS "-pthread")
 endif()
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-	set_property(TARGET mission PROPERTY WIN32_EXECUTABLE TRUE)
+	set_property(TARGET ${PROJECT_NAME} PROPERTY WIN32_EXECUTABLE TRUE)
 endif()
 
 if(CMAKE_THREAD_LIBS_INIT)
-	target_link_libraries(mission "${CMAKE_THREAD_LIBS_INIT}")
+	target_link_libraries(${PROJECT_NAME} "${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
-target_link_libraries(mission ${SFML_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${SFML_LIBRARIES})

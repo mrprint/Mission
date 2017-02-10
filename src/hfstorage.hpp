@@ -2,6 +2,7 @@
 
 #include <iterator>
 #include <limits>
+#include <memory>
 #include <assert.h>
 
 #ifdef DEBUG
@@ -9,7 +10,7 @@
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
-// Хранилище гомогенных элементов с быстрой вставкой и удалением
+// Хранилище гомогенных элементов с быстрыми вставкой и удалением
 ////////////////////////////////////////////////////////////////////////////////
 
 // Интерфейс
@@ -34,7 +35,7 @@ public:
 template <typename T>
 class HFStorageParamI : public HFStorageAbstract
 {
-    char *storage;
+    std::unique_ptr<char[]> storage;
     size_t el_size, data_sz, amount;
     T used, free;
 
@@ -46,9 +47,9 @@ public:
         amount = _amount;
         el_size = block_size_get(_el_size + sizeof(T) * 2, 1);
         data_sz = el_size * amount;
-        storage = new char[data_sz];
+        storage = std::make_unique<char[]>(data_sz);
 #ifdef DEBUG
-        memset(storage, 0, data_sz);
+        memset(storage.get(), 0, data_sz);
 #endif
         for (T i = 0; i < amount; ++i)
         {
@@ -69,8 +70,6 @@ public:
         used = std::numeric_limits<T>::max();
         free = 0;
     }
-
-    virtual ~HFStorageParamI() { delete[] storage; }
 
     virtual void* allocate() override
     {
@@ -130,20 +129,20 @@ private:
 
     T index_of(const char *const ptr) const
     {
-        assert(ptr >= storage && ptr < storage + data_sz);
-        return static_cast<T>((ptr - storage) / el_size);
+        assert(ptr >= storage.get() && ptr < storage.get() + data_sz);
+        return static_cast<T>((ptr - storage.get()) / el_size);
     }
 
     char* ptr_to(T i) const
     {
         assert(i < amount);
-        return storage + i * el_size;
+        return storage.get() + i * el_size;
     }
 
     T* lnk_to(T i) const
     {
         assert(i < amount);
-        return reinterpret_cast<T*>(storage + (i + 1) * el_size - sizeof(T) * 2);
+        return reinterpret_cast<T*>(storage.get() + (i + 1) * el_size - sizeof(T) * 2);
     }
 
     void connect(T a, T b)
@@ -200,27 +199,26 @@ private:
 // Базовое хранилище, адаптирующееся к объёму данных
 class HFStorageBasic
 {
-    HFStorageAbstract *allocator;
+    std::unique_ptr<HFStorageAbstract> allocator;
 
 public:
     HFStorageBasic(size_t el_size, size_t amount)
     {
         if (amount - 1 > std::numeric_limits<unsigned>::max())
         {
-            allocator = new HFStorageParamI<size_t>(el_size, amount);
+            allocator = std::make_unique<HFStorageParamI<size_t>>(el_size, amount);
         }
         else
             if (amount - 1 > std::numeric_limits<unsigned short>::max())
             {
-                allocator = new HFStorageParamI<unsigned>(el_size, amount);
+                allocator = std::make_unique<HFStorageParamI<unsigned>>(el_size, amount);
             }
             else
             {
-                allocator = new HFStorageParamI<unsigned short>(el_size, amount);
+                allocator = std::make_unique<HFStorageParamI<unsigned short>>(el_size, amount);
             }
     }
 
-    ~HFStorageBasic() { delete allocator; }
     void* allocate() { return allocator->allocate(); }
     void deallocate(void *ptr) { allocator->deallocate(ptr); }
     size_t used_get() const { return allocator->used_get(); }
