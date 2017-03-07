@@ -14,14 +14,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 // Интерфейс
-class HFStorageAbstract
+class IHFStorage
 {
 protected:
     size_t count;
 
 public:
-    HFStorageAbstract() : count(0) {}
-    virtual ~HFStorageAbstract() {};
+    IHFStorage() : count(0) {}
+    virtual ~IHFStorage() {};
     virtual void* allocate() = 0;
     virtual void deallocate(void*) = 0;
     virtual size_t used_get() const = 0;
@@ -33,7 +33,7 @@ public:
 
 // Хранилище с параметризованным типом индекса
 template <typename T>
-class HFStorageParamI : public HFStorageAbstract
+class HFStorageParamI : public IHFStorage
 {
     std::unique_ptr<char[]> storage;
     size_t el_size, data_sz, amount;
@@ -199,7 +199,7 @@ private:
 // Базовое хранилище, адаптирующееся к объёму данных
 class HFStorageBasic
 {
-    std::unique_ptr<HFStorageAbstract> allocator;
+    std::unique_ptr<IHFStorage> allocator;
 
 public:
     HFStorageBasic(size_t el_size, size_t amount)

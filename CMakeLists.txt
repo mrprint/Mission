@@ -13,7 +13,14 @@ endif()
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
 
-set(SRCS ${SRCS} 
+set(SRCS ${SRCS}
+    src/coworker.hpp
+    src/engine.hpp
+    src/hfstorage.hpp
+    src/pathfinding.hpp
+    src/settings.hpp
+    src/spaces.hpp
+    src/world.hpp 
 	src/main.cpp
 	src/world.cpp
 	src/engine.cpp
@@ -22,9 +29,11 @@ set(SRCS ${SRCS}
 
 if(NO_THREADS)
 	add_definitions(-DNO_THREADS)
+	set(SRCS ${SRCS} src/coworker_sync.hpp)
 	set(SRCS ${SRCS} src/coworker_sync.cpp)
 else()
 	add_definitions(-DWITH_THREADS)
+	set(SRCS ${SRCS} src/coworker_async.hpp)
 	set(SRCS ${SRCS} src/coworker_async.cpp)
 endif()
 
