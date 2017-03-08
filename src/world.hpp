@@ -92,7 +92,7 @@ public:
     Unit();
     // Обеспечивает полноценную деструкцию наследников
     virtual ~Unit() {}
-    // Получить тип юнита (RTTI не используем)
+    // Получить тип юнита
     virtual Type id() const { return utUnit; }
     // Столкнулись ли с другим юнитом
     bool is_collided(const Unit&) const;
