@@ -1,3 +1,5 @@
 build/
 thrdparty/SFML/
 thrdparty/sfml/
+.idea/
+thrdparty/boost/
