@@ -135,7 +135,7 @@ void Character::set_speed()
         return;
     }
     float a = atan2(d.x, d.y);
-    speed = SpacePosition(static_cast<float>(sin(a)), static_cast<float>(cos(a))) * CHAR_B_SPEED;
+    speed = SpacePosition(sin(a), cos(a)) * CHAR_B_SPEED;
 }
 
 // Запрос обсчета пути
@@ -249,10 +249,9 @@ void World::move_do(float tdelta)
         if (setting.timeout <= 0.0f)
         {
             setting.timeout = setting.delay;
+            if (alives.full())
+                break;
             auto pnewfb = reinterpret_cast<Fireball*>(alives.allocate());
-            if (!pnewfb)
-                // Контейнер переполнен
-                continue;
             new (pnewfb) Fireball();
             pnewfb->position = setting.position;
             if (setting.speed.x > 0.0f)

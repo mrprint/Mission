@@ -3,6 +3,7 @@
 #include <iterator>
 #include <limits>
 #include <memory>
+#include <new>
 #include <assert.h>
 
 #ifdef DEBUG
@@ -28,6 +29,7 @@ public:
     virtual void* pointer_get(size_t i) const = 0;
     virtual size_t prev_get(size_t i) const = 0;
     virtual size_t next_get(size_t i) const = 0;
+    virtual bool full() const = 0;
     size_t count_get() const { return count; }
 };
 
@@ -74,11 +76,10 @@ public:
     virtual void* allocate() override
     {
         if (free == std::numeric_limits<T>::max())
-            return 0;
+            throw std::bad_alloc();
         T ind = free;
         relink(ind, used, free);
-        if (ind != std::numeric_limits<T>::max())
-            ++count;
+        ++count;
         return pointer_get(ind);
     }
 
@@ -122,6 +123,11 @@ public:
             return std::numeric_limits<size_t>::max();
         T *lnk = lnk_to(static_cast<T>(i));
         return lnk[1];
+    }
+
+    virtual bool full() const override
+    {
+        return count == amount;
     }
 
 
@@ -226,6 +232,7 @@ public:
     size_t prev_get(size_t i) const { return allocator->prev_get(i); }
     size_t next_get(size_t i) const { return allocator->next_get(i); }
     size_t count_get() const { return allocator->count_get(); }
+    bool full() const { return allocator->full(); }
 };
 
 // Основной тип хранилища, параметризованный по типу хранящихся элементов
@@ -318,7 +325,8 @@ public:
     void deallocate(value_type *ptr) { storage.deallocate(ptr); }
 
     size_t size() const { return storage.count_get(); }
-    bool empty() const { return storage.count_get() == 0; };
+    bool empty() const { return storage.count_get() == 0; }
+    bool full() const { return storage.full(); }
 
     iterator begin()
     {
