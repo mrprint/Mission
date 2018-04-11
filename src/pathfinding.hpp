@@ -38,8 +38,8 @@ protected:
     {
         Attributes *pa;
         TCoords pos;
-        AttrsPtr() {}
-        AttrsPtr(const TCoords& p, Attributes *attrs) { pos = p; pa = &attrs[index2d(pos.x, pos.y)]; }
+        AttrsPtr() noexcept {}
+        AttrsPtr(const TCoords& p, Attributes *attrs) noexcept { pos = p; pa = &attrs[index2d(pos.x, pos.y)]; }
         bool operator> (const AttrsPtr& r) const { return r.pa->fscore < pa->fscore; }
     };
 
@@ -73,7 +73,7 @@ protected:
     bool do_search(const TMap& map, const TCoords& start_p, const TCoords& finish_p)
     {
         static struct { int x, y, d; } dirs[] =
-        { { -1, -1, 14 },{ 0, -1, 10 },{ 1, -1, 14 },{ -1, 0, 10 },{ 1, 0, 10 },{ -1, 1, 14 },{ 0, 1, 10 },{ 1, 1, 14 } };
+        { { -1, -1, 19 },{ 0, -1, 10 },{ 1, -1, 19 },{ -1, 0, 10 },{ 1, 0, 10 },{ -1, 1, 19 },{ 0, 1, 10 },{ 1, 1, 19 } };
         memset(attrs.get(), 0, sizeof(Attributes) * H * W);
         while (!opened.empty()) opened.pop();
 
@@ -99,8 +99,7 @@ protected:
                 if (attrs[ni].state == st_Wild)
                 {
                     opened_push(npos, t_gscore + cost_estimate(npos, finish_p));
-                }
-                else
+                } else
                 {
                     if (t_gscore >= attrs[ni].gscore)
                         continue;
@@ -176,7 +175,7 @@ protected:
     static TWeight cost_estimate(const TCoords& a, const TCoords& b)
     {
         TCoords dt; dt.x = b.x - a.x; dt.y = b.y - a.y;
-        return static_cast<TWeight>(10 * sqrt(static_cast<float>(dt.x * dt.x + dt.y * dt.y)));
+        return static_cast<TWeight>(10 * (dt.x * dt.x + dt.y * dt.y));
     }
 
     static bool inbound(int x, int y)

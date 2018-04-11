@@ -5,6 +5,7 @@
 #include <SFML/Audio.hpp>
 #include "world.hpp"
 #include "spaces.hpp"
+#include "mathapp.hpp"
 
 // Воспроизводящиеся звуки
 class Orchestre
@@ -18,8 +19,8 @@ public:
 
 struct DrawingSizes
 {
-    float spr_scale;
-    float bkg_scale;
+    tool::fpoint_fast spr_scale;
+    tool::fpoint_fast bkg_scale;
     int screen_w;
     int screen_h;
     int room_w;
@@ -41,9 +42,9 @@ class Engine
     std::unique_ptr<sf::RenderWindow> window;
     sf::Font font;
     std::bitset<_csEND> controls;
-    ScreenPosition mouse_p;
+    tool::ScreenPosition mouse_p;
     Orchestre played_sounds;
-    float banner_timeout;
+    tool::fpoint_fast banner_timeout;
     bool windowed;
 public:
     DrawingSizes sizes;
@@ -57,12 +58,12 @@ private:
     void frame_render();
     void input_process();
     void update(sf::Time);
-    void sprite_draw(sf::Sprite&, const ScreenPosition&, float);
+    void sprite_draw(sf::Sprite&, const tool::ScreenPosition&, tool::fpoint_fast);
     void field_draw();
-    void path_change(DeskPosition);
-    bool cell_flip(DeskPosition);
+    void path_change(tool::DeskPosition);
+    bool cell_flip(tool::DeskPosition);
     void sounds_play();
-    void text_print(const ScreenPosition&, unsigned, const std::string&, bool = false);
+    void text_print(const tool::ScreenPosition&, unsigned, const std::string&, bool = false);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

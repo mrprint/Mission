@@ -10,8 +10,13 @@
 #include "world.hpp"
 #include "coworker.hpp"
 #include "assets.hpp"
+#include "mathapp.hpp"
 
 using namespace std;
+
+using SpacePosition = tool::SpacePosition;
+using DeskPosition = tool::DeskPosition;
+using ScreenPosition = tool::ScreenPosition;
 
 constexpr static auto TEXT_COLOR = 0xFF0010FF;
 constexpr static auto TEXT_CHR_SIZE = 24;
@@ -68,16 +73,19 @@ void Engine::videomode_set(bool _windowed)
         mode = sf::VideoMode(SCREEN_W, SCREEN_H);
         window->create(mode, TITLE, sf::Style::Titlebar | sf::Style::Close);
         window->setFramerateLimit(60);
-    }
-    else
+    } else
     {
         mode = sf::VideoMode::getDesktopMode();
         window->create(mode, TITLE, sf::Style::Fullscreen);
         window->setVerticalSyncEnabled(true);
+#if defined(SFML_SYSTEM_ANDROID) || defined(SFML_SYSTEM_LINUX) || defined(SFML_SYSTEM_FREEBSD)
+#if !(SFML_VERSION_MAJOR > 2 || SFML_VERSION_MAJOR == 2 && SFML_VERSION_MINOR > 4 || SFML_VERSION_MAJOR == 2 && SFML_VERSION_MINOR == 4 && SFML_VERSION_PATCH >= 1)
         // Обход SFML's bug #921
         window->setView(sf::View(
-            sf::FloatRect(0.0f, 0.0f, static_cast<float>(mode.width), static_cast<float>(mode.height))
+            sf::FloatRect(0.0f, 0.0f, static_cast<tool::fpoint_fast>(mode.width), static_cast<tool::fpoint_fast>(mode.height))
         ));
+#endif
+#endif
     }
     windowed = _windowed;
     sizes.screen_w = mode.width;
@@ -104,7 +112,7 @@ void Engine::frame_render()
     field_draw();
     // Отображаем игровую информацию
     text_print(
-        ScreenPosition(static_cast<float>(sizes.lc_ofst)),
+        ScreenPosition(static_cast<tool::fpoint_fast>(sizes.lc_ofst)),
         TEXT_COLOR,
         string("Level ") + to_string(the_world.level + 1)
     );
@@ -213,8 +221,7 @@ void Engine::update(sf::Time tdelta)
                 the_world.state = gsINPROGRESS;
                 the_world.setup();
             }
-        }
-        else
+        } else
         {
             // Показываем баннер и выполняем базовые настройки при смене состояния
             banner_timeout = BANNER_TOUT;
@@ -230,8 +237,7 @@ void Engine::update(sf::Time tdelta)
                 break;
             }
         }
-    }
-    else
+    } else
     {
         the_world.state_check(); // Оцениваем состояние игры
     }
@@ -241,11 +247,10 @@ void Engine::update(sf::Time tdelta)
         if (!the_world.character->path_requested && the_coworker.flags_get(Coworker::cwREADY) && !lb_down)
         {
             // Будем идти в указанную позицию
-            path_change(mouse_p);
+            path_change(DeskPosition(mouse_p));
             lb_down = true;
         }
-    }
-    else
+    } else
         lb_down = false;
     if (controls.test(csRMBUTTON) && the_world.state == gsINPROGRESS)
     {
@@ -253,7 +258,7 @@ void Engine::update(sf::Time tdelta)
         if (!the_world.character->path_requested && the_coworker.flags_get(Coworker::cwREADY) && !rb_down)
         {
             // Пытаемся изменить состояние ячейки "свободна"/"препятствие"
-            if (cell_flip(mouse_p))
+            if (cell_flip(DeskPosition(mouse_p)))
             {
                 // При необходимости обсчитываем изменения пути
                 if (the_world.character->way.path.size() > 0)
@@ -261,8 +266,7 @@ void Engine::update(sf::Time tdelta)
             }
             rb_down = true;
         }
-    }
-    else
+    } else
         rb_down = false;
     if (the_world.character->path_requested && the_coworker.flags_get(Coworker::cwREADY))
     {
@@ -292,9 +296,9 @@ void Engine::work_do()
     main_loop();
 }
 
-void Engine::sprite_draw(sf::Sprite &spr, const ScreenPosition &pos, float scale)
+void Engine::sprite_draw(sf::Sprite &spr, const ScreenPosition &pos, tool::fpoint_fast scale)
 {
-    spr.setPosition(pos);
+    spr.setPosition(sf::Vector2f(pos));
     spr.setScale(scale, scale);
     window->draw(spr);
 }
@@ -307,29 +311,29 @@ void Engine::field_draw()
         for (int x = 0; x < WORLD_DIM; x++)
         {
             if (!the_world.field(x, y).attribs.test(Cell::atrOBSTACLE))
-                sprite_draw(the_sprites[sprTILE].sprite, DeskPosition(x, y), sizes.spr_scale);
+                sprite_draw(the_sprites[sprTILE].sprite, ScreenPosition(DeskPosition(x, y)), sizes.spr_scale);
             if (the_world.field(x, y).attribs.test(Cell::atrEXIT))
-                sprite_draw(the_sprites[sprEXIT].sprite, DeskPosition(x, y), sizes.spr_scale);
+                sprite_draw(the_sprites[sprEXIT].sprite, ScreenPosition(DeskPosition(x, y)), sizes.spr_scale);
         };
     // Рисуем стены
     for (int i = 0; i < WORLD_DIM; i++)
     {
-        sprite_draw(the_sprites[sprRWALL].sprite, DeskPosition(i, 0), sizes.spr_scale);
-        sprite_draw(the_sprites[sprLWALL].sprite, DeskPosition(0, i), sizes.spr_scale);
+        sprite_draw(the_sprites[sprRWALL].sprite, ScreenPosition(DeskPosition(i, 0)), sizes.spr_scale);
+        sprite_draw(the_sprites[sprLWALL].sprite, ScreenPosition(DeskPosition(0, i)), sizes.spr_scale);
     }
     // Рисуем пушки
     for (auto &setting : the_world.artillery.setting)
     {
-        if (abs(setting.speed.x) < numeric_limits<float>::epsilon())
-            sprite_draw(the_sprites[sprRBATT].sprite, setting.position, sizes.spr_scale);
+        if (abs(setting.speed.x) < numeric_limits<tool::fpoint_fast>::epsilon())
+            sprite_draw(the_sprites[sprRBATT].sprite, ScreenPosition(setting.position), sizes.spr_scale);
         else
-            sprite_draw(the_sprites[sprLBATT].sprite, setting.position, sizes.spr_scale);
+            sprite_draw(the_sprites[sprLBATT].sprite, ScreenPosition(setting.position), sizes.spr_scale);
     }
     // Заполняем список юнитов с их экранными координатами
     ScreenPositions positions;
     for (auto &alive : the_world.alives)
     {
-        positions.emplace_back(UnitOnScreen{ alive.position , &alive });
+        positions.emplace_back(UnitOnScreen{ ScreenPosition(alive.position) , &alive });
     }
     sort(positions.begin(), positions.end()); // Сортируем по экранному y
     // Рисуем юниты от дальних к ближним
@@ -354,7 +358,7 @@ void Engine::field_draw()
 // Изменение состояния указанной мышкой ячейки
 bool Engine::cell_flip(DeskPosition md)
 {
-    auto dp = the_world.character->position;
+    auto dp = DeskPosition(the_world.character->position);
     if (md.x < 0 || md.x >= WORLD_DIM || md.y < 0 || md.y >= WORLD_DIM || (md.x == dp.x && md.y == dp.y))
         return false;
     if (the_world.field[md].attribs.test(Cell::atrOBSTACLE))
@@ -404,10 +408,9 @@ void Engine::text_print(const ScreenPosition &pos, unsigned color, const string&
     {
         auto bounds = text.getLocalBounds();
         text.setOrigin(bounds.width / 2.0f, bounds.height / 2.0f);
-    }
-    else
+    } else
         text.setOrigin(0.0f, 0.0f);
-    text.setPosition(pos);
+    text.setPosition(sf::Vector2f(pos));
     window->draw(text);
 }
 
@@ -446,12 +449,12 @@ bool SpriteInfo::init()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-AnimationSequence::AnimationSequence(float _length) : length(_length)
+AnimationSequence::AnimationSequence(tool::fpoint_fast _length) : length(_length)
 {
     node = sequence.front().time == 0.0 ? sequence.begin() : --sequence.end();
 }
 
-void AnimationSequence::advance(float tdelta)
+void AnimationSequence::advance(tool::fpoint_fast tdelta)
 {
     auto t = time + tdelta;
     time = t > length ? t - length : t;

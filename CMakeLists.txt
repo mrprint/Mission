@@ -8,7 +8,7 @@ option(NO_THREADS "Single-threaded, synchronous mode" OFF)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules")
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-	set(SFML_ROOT "${CMAKE_SOURCE_DIR}/thrdparty/SFML")
+    set(SFML_ROOT "${CMAKE_SOURCE_DIR}/thrdparty/SFML")
 endif()
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
@@ -20,63 +20,54 @@ set(SRCS ${SRCS}
     src/pathfinding.hpp
     src/settings.hpp
     src/spaces.hpp
-    src/world.hpp 
-	src/main.cpp
-	src/world.cpp
-	src/engine.cpp
-	src/assets.cpp
-	src/spaces.cpp)
+    src/world.hpp
+    src/mathapp.hpp
+    src/main.cpp
+    src/world.cpp
+    src/engine.cpp
+    src/assets.cpp
+    src/spaces.cpp)
 
 if(NO_THREADS)
-	add_definitions(-DNO_THREADS)
-	set(SRCS ${SRCS} src/coworker_sync.hpp)
-	set(SRCS ${SRCS} src/coworker_sync.cpp)
+    add_definitions(-DNO_THREADS)
+    set(SRCS ${SRCS} src/coworker_sync.hpp)
+    set(SRCS ${SRCS} src/coworker_sync.cpp)
 else()
-	add_definitions(-DWITH_THREADS)
-	set(SRCS ${SRCS} src/coworker_async.hpp)
-	set(SRCS ${SRCS} src/coworker_async.cpp)
+    add_definitions(-DWITH_THREADS)
+    set(SRCS ${SRCS} src/coworker_async.hpp)
+    set(SRCS ${SRCS} src/coworker_async.cpp)
 endif()
 
 include(CheckCXXCompilerFlag)
 
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+CHECK_CXX_COMPILER_FLAG("/std:c++17" COMPILER_SUPPORTS_W_CXX17)
+CHECK_CXX_COMPILER_FLAG("/GR-" COMPILER_SUPPORTS_W_GRMINUS)
+else()
 CHECK_CXX_COMPILER_FLAG("-std=c++17" COMPILER_SUPPORTS_CXX17)
 CHECK_CXX_COMPILER_FLAG("-std=c++1z" COMPILER_SUPPORTS_CXX1z)
-CHECK_CXX_COMPILER_FLAG("-std=c++14" COMPILER_SUPPORTS_CXX14)
-CHECK_CXX_COMPILER_FLAG("-std=c++1y" COMPILER_SUPPORTS_CXX1y)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
 CHECK_CXX_COMPILER_FLAG("-pedantic" COMPILER_SUPPORTS_PEDANTIC)
 CHECK_CXX_COMPILER_FLAG("-fno-rtti" COMPILER_SUPPORTS_FNO_RTTI)
-CHECK_CXX_COMPILER_FLAG("/GR-" COMPILER_SUPPORTS_GR_MINUS)
+endif()
 
-if(COMPILER_SUPPORTS_CXX17)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+if(COMPILER_SUPPORTS_W_CXX17)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
+elseif(COMPILER_SUPPORTS_CXX17)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 elseif(COMPILER_SUPPORTS_CXX1z)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z")
-elseif(COMPILER_SUPPORTS_CXX14)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-elseif(COMPILER_SUPPORTS_CXX1y)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
-elseif(COMPILER_SUPPORTS_CXX11)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-elseif(COMPILER_SUPPORTS_CXX0X)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z")
 endif()
 
 if((COMPILER_SUPPORTS_CXX17
-	OR COMPILER_SUPPORTS_CXX1z
-	OR COMPILER_SUPPORTS_CXX14
-	OR COMPILER_SUPPORTS_CXX1y
-	OR COMPILER_SUPPORTS_CXX11
-	OR COMPILER_SUPPORTS_CXX0X)
-	AND COMPILER_SUPPORTS_PEDANTIC)
+    OR COMPILER_SUPPORTS_CXX1z)
+    AND COMPILER_SUPPORTS_PEDANTIC)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic")
 endif()
 
 find_package(SFML 2.3 COMPONENTS system window graphics audio REQUIRED)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-	find_package(SFML 2.3 COMPONENTS main REQUIRED)
+    find_package(SFML 2.3 COMPONENTS main REQUIRED)
 endif()
 
 find_package(Threads REQUIRED)
@@ -84,23 +75,23 @@ find_package(Threads REQUIRED)
 include_directories(${SFML_INCLUDE_DIR})
 add_executable(${PROJECT_NAME} ${SRCS})
 
-if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC") AND COMPILER_SUPPORTS_GR_MINUS)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
+if (COMPILER_SUPPORTS_W_GRMINUS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
 elseif (COMPILER_SUPPORTS_FNO_RTTI)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
 endif()
 
 if((NOT NO_THREADS) AND THREADS_HAVE_PTHREAD_ARG)
-	set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY COMPILE_OPTIONS "-pthread")
-	set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY INTERFACE_COMPILE_OPTIONS "-pthread")
+    set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY COMPILE_OPTIONS "-pthread")
+    set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY INTERFACE_COMPILE_OPTIONS "-pthread")
 endif()
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-	set_property(TARGET ${PROJECT_NAME} PROPERTY WIN32_EXECUTABLE TRUE)
+    set_property(TARGET ${PROJECT_NAME} PROPERTY WIN32_EXECUTABLE TRUE)
 endif()
 
 if(CMAKE_THREAD_LIBS_INIT)
-	target_link_libraries(${PROJECT_NAME} "${CMAKE_THREAD_LIBS_INIT}")
+    target_link_libraries(${PROJECT_NAME} "${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
 target_link_libraries(${PROJECT_NAME} ${SFML_LIBRARIES})

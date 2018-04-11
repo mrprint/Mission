@@ -10,7 +10,7 @@ static FieldsAStar a_star;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Coworker::path_find_request(const Field &_field, DeskPosition st, DeskPosition fn)
+void Coworker::path_find_request(const Field &_field, tool::DeskPosition st, tool::DeskPosition fn)
 {
     path.clear();
     a_star.search_ofs(&path, _field, st, fn);

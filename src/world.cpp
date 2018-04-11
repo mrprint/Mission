@@ -10,8 +10,13 @@
 #include "spaces.hpp"
 #include "pathfinding.hpp"
 #include "coworker.hpp"
+#include "mathapp.hpp"
 
 using namespace std;
+
+using SpacePosition = tool::SpacePosition;
+using DeskPosition = tool::DeskPosition;
+using ScreenPosition = tool::ScreenPosition;
 
 World the_world;
 
@@ -20,22 +25,22 @@ static uniform_real_distribution<> ureal_dist(0.0, 1.0);
 
 // Мелкие вспомогательные функции
 
-static inline bool rnd_choice(float possib)
+static inline bool rnd_choice(tool::fpoint_fast possib)
 {
     return ureal_dist(rng) < possib;
 }
 
-static inline float deviation_apply(float val, float dev)
+static inline tool::fpoint_fast deviation_apply(tool::fpoint_fast val, tool::fpoint_fast dev)
 {
-    return (2 * dev * static_cast<float>(ureal_dist(rng)) - dev + 1) * val;
+    return (2 * dev * static_cast<tool::fpoint_fast>(ureal_dist(rng)) - dev + 1) * val;
 }
 
-static inline int complexity_apply(int val, float kc)
+static inline int complexity_apply(int val, tool::fpoint_fast kc)
 {
     return val + static_cast<int>(round(val * the_world.level * kc));
 }
 
-static inline float complexity_apply(float val, float kc)
+static inline tool::fpoint_fast complexity_apply(tool::fpoint_fast val, tool::fpoint_fast kc)
 {
     return val + val * the_world.level * kc;
 }
@@ -73,10 +78,10 @@ Unit::Unit()
 
 bool Unit::is_collided(const Unit& unit) const
 {
-    return position >> unit.position < size + unit.size;
+    return position.distance(unit.position) < size + unit.size;
 }
 
-void Unit::move(float tdelta)
+void Unit::move(tool::fpoint_fast tdelta)
 {
     position += speed * tdelta;
 }
@@ -89,17 +94,18 @@ Character::Character() : Unit()
     way.target = 0;
 }
 
-void Character::move(float tdelta)
+void Character::move(tool::fpoint_fast tdelta)
 {
     if (the_world.state == gsINPROGRESS)
         // Перемещаемся только во время игры
         Unit::move(tdelta);
     if (way.path.size() == 0)
         return;
-    if ((speed.x > F_EPSILON && position.x >= way.neigpos.x)
-        || (speed.x < -F_EPSILON && position.x <= way.neigpos.x)
-        || (speed.y > F_EPSILON && position.y >= way.neigpos.y)
-        || (speed.y < -F_EPSILON && position.y <= way.neigpos.y))
+    constexpr auto eps = numeric_limits<tool::fpoint_fast>::epsilon();
+    if ((speed.x > eps && position.x >= way.neigpos.x)
+        || (speed.x < -eps && position.x <= way.neigpos.x)
+        || (speed.y > eps && position.y >= way.neigpos.y)
+        || (speed.y < -eps && position.y <= way.neigpos.y))
     {
         // Этап завершен
         position = way.neigpos;
@@ -109,8 +115,7 @@ void Character::move(float tdelta)
             way.path.clear();
             way.stage = 0;
             way.target = position;
-        }
-        else
+        } else
         {
             // Следующий этап
             ++way.stage;
@@ -129,13 +134,12 @@ void Character::set_speed()
         return;
     }
     auto d = way.neigpos - position;
-    if (d.x < F_EPSILON && d.x > -F_EPSILON && d.y < F_EPSILON && d.y > -F_EPSILON)
+    if (d.atzero())
     {
         speed = 0.0f;
         return;
     }
-    float a = atan2(d.x, d.y);
-    speed = SpacePosition(sin(a), cos(a)) * CHAR_B_SPEED;
+    speed = d.normalized() * CHAR_B_SPEED;
 }
 
 // Запрос обсчета пути
@@ -143,7 +147,7 @@ void Character::way_new_request(DeskPosition pos)
 {
     speed = 0.0f;
     way.target = pos;
-    the_coworker.path_find_request(the_world.field, position, pos);
+    the_coworker.path_find_request(the_world.field, DeskPosition(position), pos);
     path_requested = true;
 }
 
@@ -161,10 +165,10 @@ void Character::way_new_process()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void Guard::move(float tdelta)
+void Guard::move(tool::fpoint_fast tdelta)
 {
     Unit::move(tdelta);
-    DeskPosition dp = position;
+    auto dp = DeskPosition(position);
     if (the_world.field[dp].attribs.test(Cell::atrGUARDBACKW))
         speed.x = -abs(speed.x);
     if (the_world.field[dp].attribs.test(Cell::atrGUARDFORW))
@@ -228,7 +232,7 @@ void World::setup()
 }
 
 // Изменения в состоянии мира за отведённый квант времени
-void World::move_do(float tdelta)
+void World::move_do(tool::fpoint_fast tdelta)
 {
     // Перемещаем существующие юниты и удаляем отжившие
     for (UnitsList::iterator it = alives.begin(); it != alives.end();)
@@ -238,8 +242,7 @@ void World::move_do(float tdelta)
         {
             it->~Unit();
             it = alives.erase(it);
-        }
-        else
+        } else
             ++it;
     }
     // Генерируем новые выстрелы
@@ -268,7 +271,7 @@ void World::move_do(float tdelta)
 // Проверка состояния игры
 void World::state_check()
 {
-    if (field[character->position].attribs.test(Cell::atrEXIT))
+    if (field[DeskPosition(character->position)].attribs.test(Cell::atrEXIT))
     {
         state = gsWIN;
         return;

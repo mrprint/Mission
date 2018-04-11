@@ -24,7 +24,7 @@ public:
     void flags_clear(unsigned _flags) { flags &= ~_flags; }
     bool flags_get(unsigned _flags) { return (flags & _flags) == _flags; }
     // Запрос на расчёт пути
-    void path_find_request(const Field&, DeskPosition, DeskPosition);
+    void path_find_request(const Field&, tool::DeskPosition, tool::DeskPosition);
     // Получение результата
     void path_read(Path& _path) { _path.swap(path); }
 };
