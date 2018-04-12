@@ -54,7 +54,7 @@ namespace tool
         Vector2D rotate(const Vector2D& val) const { return Vector2D(x*val.x - y * val.y, x*val.y + y * val.x); }
         Vector2D rotate(basetype val) const { return rotate(Vector2D(val)); }
         bool atzero() const {
-            constexpr auto eps = numeric_limits<tool::fpoint_fast>::epsilon();
+            constexpr auto eps = std::numeric_limits<tool::fpoint_fast>::epsilon();
             return x < eps && x > -eps && y < eps && y > -eps;
         }
     };
