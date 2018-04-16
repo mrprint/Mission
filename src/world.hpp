@@ -3,6 +3,7 @@
 #include <deque>
 #include <bitset>
 #include <vector>
+#include <array>
 #include <algorithm>
 #include "settings.hpp"
 #include "hfstorage.hpp"
@@ -169,6 +170,8 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 // Вселенная
 
+constexpr std::array<std::size_t, 3> all_unit_sizes = { sizeof(Character), sizeof(Guard), sizeof(Fireball) };
+
 class World
 {
 public:
@@ -183,7 +186,7 @@ public:
     World() :
         level(0),
         state(gsINPROGRESS),
-        alives(std::max(std::max(sizeof(Character), sizeof(Guard)), sizeof(Fireball)), WORLD_DIM * WORLD_DIM / 2)
+        alives(*std::max_element(all_unit_sizes.begin(), all_unit_sizes.end()), WORLD_DIM * WORLD_DIM / 2)
     { }
     void move_do(tool::fpoint_fast);
     void setup();
