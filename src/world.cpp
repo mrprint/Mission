@@ -78,7 +78,9 @@ Unit::Unit()
 
 bool Unit::is_collided(const Unit& unit) const
 {
-    return position.distance(unit.position) < size + unit.size;
+    return 
+        position.dist_square(unit.position) <
+        size * size + unit.size * unit.size;
 }
 
 void Unit::move(tool::fpoint_fast tdelta)

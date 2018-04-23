@@ -49,6 +49,7 @@ namespace tool
         basetype dot(basetype val) const { return dot(Vector2D(val)); }
         basetype distance(const Vector2D& val) const { Vector2D t = *this - val; return static_cast<basetype>(hypot_fast(t.x, t.y)); }
         basetype distance(basetype val) const { return distance(Vector2D(val)); }
+        basetype dist_square(const Vector2D& val) const { Vector2D t = *this - val; return t.x * t.x + t.y * t.y; }
         basetype hypot() const { return static_cast<basetype>(hypot_fast(x, y)); }
         Vector2D normalized() const { return *this / hypot(); }
         Vector2D rotate(const Vector2D& val) const { return Vector2D(x*val.x - y * val.y, x*val.y + y * val.x); }
