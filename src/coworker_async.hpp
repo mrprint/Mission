@@ -18,7 +18,7 @@ class Coworker
     std::thread w_thread;
 
     const Field *field;
-    DeskPosition start_p, finish_p;
+    tool::DeskPosition start_p, finish_p;
     Path path;
 
 public:
@@ -36,7 +36,7 @@ public:
     void flags_clear(unsigned _flags) { flags.fetch_and(~_flags); }
     bool flags_get(unsigned _flags) { return (flags.load() & _flags) == _flags; }
     // Запрос на расчёт пути
-    void path_find_request(const Field&, DeskPosition, DeskPosition);
+    void path_find_request(const Field&, tool::DeskPosition, tool::DeskPosition);
     // Получение результата
     void path_read(Path& _path) const { _path = path; }
 

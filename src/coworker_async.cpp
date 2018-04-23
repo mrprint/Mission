@@ -3,6 +3,7 @@
 #include <mutex>
 #include "coworker_async.hpp"
 #include "world.hpp"
+#include "spaces.hpp"
 
 using namespace std;
 
@@ -27,7 +28,7 @@ void Coworker::stop()
     w_thread.join();
 }
 
-void Coworker::path_find_request(const Field &_field, DeskPosition st, DeskPosition fn)
+void Coworker::path_find_request(const Field &_field, tool::DeskPosition st, tool::DeskPosition fn)
 {
     if (flags_get(cwREADY))
     {
