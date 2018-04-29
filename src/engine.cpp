@@ -93,8 +93,6 @@ void Engine::videomode_set(bool _windowed)
 
     auto tile_w = (sizes.screen_w - (_LC_OFST * 2)) / WORLD_DIM - ((sizes.screen_w - (_LC_OFST * 2)) / WORLD_DIM) % 2;
     auto tile_h = tile_w / 2;
-    auto tile_hw = tile_w / 2;
-    auto tile_hh = tile_h / 2 + (tile_h / 2) % 2;
     sizes.room_w = tile_w * WORLD_DIM;
     sizes.room_h = tile_h * WORLD_DIM;
     sizes.lc_ofst = (sizes.screen_w - sizes.room_w) / 2;
