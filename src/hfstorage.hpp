@@ -195,7 +195,7 @@ namespace tool
         static std::size_t block_size_get(std::size_t el_sz, T amount)
         {
             std::size_t raw_sz = amount * el_sz;
-            return raw_sz + (raw_sz % sizeof(std::size_t) ? sizeof(std::size_t) : 0);
+            return raw_sz + ((raw_sz % sizeof(std::size_t)) ? sizeof(std::size_t) : 0);
         }
     };
 
@@ -292,7 +292,7 @@ namespace tool
         };
         friend class iterator;
 
-        HFStorage(std::size_t amount) : storage(sizeof(value_type), amount) {}
+        explicit HFStorage(std::size_t amount) : storage(sizeof(value_type), amount) {}
         HFStorage(std::size_t el_size, std::size_t amount) : storage(el_size, amount) {}
         ~HFStorage()
         {

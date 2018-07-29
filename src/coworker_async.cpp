@@ -54,7 +54,7 @@ void Coworker::body()
         if (!flags_get(cwREADY))
         {
             path.clear();
-            a_star.search_ofs(&path, *field, start_p, finish_p);
+            a_star.search_ofs(path, *field, start_p, finish_p);
             flags_set(cwREADY);
         }
     }

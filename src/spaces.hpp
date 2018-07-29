@@ -25,10 +25,11 @@ namespace tool
     {
         using basetype = T;
         basetype x, y;
-        Vector2D() noexcept { x = static_cast<basetype>(0); y = static_cast<basetype>(0); }
+        Vector2D() noexcept : x(static_cast<basetype>(0)), y(static_cast<basetype>(0)) {}
         Vector2D(const Vector2D& val) noexcept : x(val.x), y(val.y) {}
         Vector2D(basetype _x, basetype _y) noexcept : x(_x), y(_y) {}
         explicit Vector2D(basetype val) noexcept : x(val), y(val) {}
+        Vector2D& operator=(const Vector2D& val) noexcept { x = val.x; y = val.y; return *this; }
         Vector2D& operator=(basetype val) noexcept { x = val; y = val; return *this; }
         Vector2D operator-() const { return Vector2D(-x, -y); }
         Vector2D operator+(const Vector2D& val) const { return Vector2D(x + val.x, y + val.y); }

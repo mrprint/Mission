@@ -22,6 +22,7 @@ set(SRCS ${SRCS}
     src/spaces.hpp
     src/world.hpp
     src/mathapp.hpp
+    src/assets.hpp
     src/main.cpp
     src/world.cpp
     src/engine.cpp

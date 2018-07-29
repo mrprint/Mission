@@ -48,9 +48,8 @@ public:
 
     Attributes attribs;
 
-    Cell() {};
-    Cell(const Cell&);
-    Cell(const Attributes&);
+    Cell() = default;
+    explicit Cell(const Attributes& _attribs) : attribs(_attribs) {};
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -61,9 +60,7 @@ class Field
 
 public:
 
-    Field() {};
-    Field(const Field&);
-
+    Field() = default;
     Cell& operator[](tool::DeskPosition i) { return cells[i.y][i.x]; }
     Cell& operator()(unsigned x, unsigned y) { return cells[y][x]; }
     // Интерфейсный метод для AStar
@@ -91,7 +88,7 @@ public:
     tool::SpacePosition position;  // Положение в двухмерном пространстве
     Speed speed; // Скорость перемещения
 
-    Unit();
+    Unit() : size(U_SIZE), position(), speed() {};
     // Обеспечивает полноценную деструкцию наследников
     virtual ~Unit() {}
     // Получить тип юнита
@@ -119,7 +116,7 @@ public:
     bool path_requested; // Обсчитывается путь
 
     Character();
-    virtual Type id() const { return utCharacter; }
+    virtual Type id() const override { return utCharacter; }
     virtual void move(tool::fpoint_fast) override;
     // Устанавливает скорость
     void set_speed();
@@ -133,14 +130,14 @@ public:
 class Guard : public Unit
 {
 public:
-    virtual Type id() const { return utGuard; }
+    virtual Type id() const override { return utGuard; }
     virtual void move(tool::fpoint_fast) override;
 };
 
 // Выстрел
 class Fireball : public Unit
 {
-    virtual Type id() const { return utFireball; }
+    virtual Type id() const override { return utFireball; }
 };
 
 using UnitsList = tool::HFStorage<Unit>; // Группа юнитов
@@ -163,8 +160,8 @@ public:
 
     Settings setting; // Все пушки артбатареи
 
-    Artillery() {};
-    Artillery(const Settings&);
+    Artillery() = default;
+    explicit Artillery(const Settings& _settings) : setting(_settings) {};
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -186,7 +183,11 @@ public:
     World() :
         level(0),
         state(gsINPROGRESS),
-        alives(*std::max_element(all_unit_sizes.begin(), all_unit_sizes.end()), WORLD_DIM * WORLD_DIM / 2)
+        field(),
+        alives(*std::max_element(all_unit_sizes.begin(), all_unit_sizes.end()), WORLD_DIM * WORLD_DIM / 2),
+        artillery(),
+        character(),
+        sounds()
     { }
     void move_do(tool::fpoint_fast);
     void setup();

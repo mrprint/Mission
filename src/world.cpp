@@ -46,35 +46,6 @@ static inline tool::fpoint_fast complexity_apply(tool::fpoint_fast val, tool::fp
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Cell::Cell(const Cell& cell)
-{
-    attribs = cell.attribs;
-}
-
-Cell::Cell(const Attributes& _attribs)
-{
-    attribs = _attribs;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-Artillery::Artillery(const Settings& _settings)
-{
-    setting = _settings;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-Field::Field(const Field& field)
-{
-    for (int y = 0; y < WORLD_DIM; y++)
-        for (int x = 0; x < WORLD_DIM; x++)
-            cells[y][x] = field.cells[y][x];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-Unit::Unit()
-{
-    size = U_SIZE;
-}
 
 bool Unit::is_collided(const Unit& unit) const
 {

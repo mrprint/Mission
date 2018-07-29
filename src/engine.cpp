@@ -37,7 +37,7 @@ enum SoundIndexes {
 struct UnitOnScreen {
     ScreenPosition pos;
     Unit *unit;
-    bool operator<(const UnitOnScreen &u) { return (pos.y < u.pos.y); }
+    bool operator<(const UnitOnScreen &u) const { return (pos.y < u.pos.y); }
 };
 
 using ScreenPositions = vector<UnitOnScreen>; // Список расположения юнитов
@@ -45,11 +45,13 @@ using ScreenPositions = vector<UnitOnScreen>; // Список расположе
 Engine the_engine; // Экземпляр движка
 
 ////////////////////////////////////////////////////////////////////////////////
-Engine::Engine()
+Engine::Engine() :
+    window(make_unique<sf::RenderWindow>()),
+    banner_timeout(0.0f),
+    windowed(true),
+    sizes()
 {
-    window = make_unique<sf::RenderWindow>();
-    banner_timeout = 0.0f;
-    windowed = true;
+    
 }
 
 bool Engine::init()

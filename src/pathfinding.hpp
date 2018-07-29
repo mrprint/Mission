@@ -3,6 +3,7 @@
 #include <string.h>
 #include <cmath>
 #include <functional>
+#include <algorithm>
 #include <vector>
 #include <queue>
 #include <memory>
@@ -38,7 +39,7 @@ protected:
     {
         Attributes *pa;
         TCoords pos;
-        AttrsPtr() noexcept {}
+        AttrsPtr() { /* NO MEMBERS INIT */ };
         AttrsPtr(const TCoords& p, Attributes *attrs) noexcept { pos = p; pa = &attrs[index2d(pos.x, pos.y)]; }
         bool operator> (const AttrsPtr& r) const { return r.pa->fscore < pa->fscore; }
     };
@@ -51,7 +52,7 @@ public:
     AStar() : attrs(new Attributes[H * W]) { temp_buff.reserve(H + W); }
 
     // Получить смещения (в обратном порядке)
-    bool search_ofs(TPath *path, const TMap& map, const TCoords& start_p, const TCoords& finish_p)
+    bool search_ofs(TPath& path, const TMap& map, const TCoords& start_p, const TCoords& finish_p)
     {
         if (!do_search(map, start_p, finish_p))
             return false;
@@ -60,7 +61,7 @@ public:
     }
 
     // Получить абсолютные координаты (в обратном порядке)
-    bool search(TPath *path, const TMap& map, const TCoords& start_p, const TCoords& finish_p)
+    bool search(TPath& path, const TMap& map, const TCoords& start_p, const TCoords& finish_p)
     {
         if (!do_search(map, start_p, finish_p))
             return false;
@@ -141,7 +142,7 @@ protected:
         }
     }
 
-    void get_path_ofs(TPath *path, const TCoords& start_p, const TCoords& finish_p)
+    void get_path_ofs(TPath& path, const TCoords& start_p, const TCoords& finish_p) const
     {
         size_t ci = index2d(finish_p.x, finish_p.y);
         size_t si = index2d(start_p.x, start_p.y);
@@ -150,20 +151,20 @@ protected:
             TCoords p;
             p.x = attrs[ci].ofsx;
             p.y = attrs[ci].ofsy;
-            path->push_back(p);
+            path.push_back(p);
             ci -= W * p.y + p.x;
         }
     }
 
-    void get_path(TPath *path, const TCoords& start_p, const TCoords& finish_p)
+    void get_path(TPath& path, const TCoords& start_p, const TCoords& finish_p) const
     {
         get_path_ofs(path, start_p, finish_p);
         TCoords cp = start_p;
-        for (typename std::vector<TCoords>::reverse_iterator it = path->rbegin(); it != path->rend(); ++it)
+        for(auto& it : std::reverse(path.rbegin(), path.rend()))
         {
             cp.x += it->x;
             cp.y += it->y;
-            *it = cp;
+            it = cp;
         }
     }
 
