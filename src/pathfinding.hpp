@@ -39,7 +39,7 @@ protected:
     {
         Attributes *pa;
         TCoords pos;
-        AttrsPtr() { /* NO MEMBERS INIT */ };
+        AttrsPtr() noexcept { /* NO MEMBERS INIT */ };
         AttrsPtr(const TCoords& p, Attributes *attrs) noexcept { pos = p; pa = &attrs[index2d(pos.x, pos.y)]; }
         bool operator> (const AttrsPtr& r) const { return r.pa->fscore < pa->fscore; }
     };
